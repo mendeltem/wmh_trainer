@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WMH Rater Trainer</title>
+<style>
+  :root{
+    --bg:#14181d; --panel:#1c2229; --panel2:#252d37; --line:#34404d;
+    --ink:#e8ecf1; --muted:#9dabb9; --accent:#6db3ee; --accent-ink:#08131d;
+    --own:#ffb000; --agree:#00d68f; --missed:#4da3ff; --extra:#ff5a36; --ignored:#aaaab4;
+    --warn:#ffcf70; --late:#ff5d5d;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);
+       font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       font-size:15px;line-height:1.45}
+  a{color:var(--accent)}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.01em}
+  h2{font-size:16px;margin:0 0 6px}
+  h3{font-size:12px;margin:0 0 6px;color:var(--muted);font-weight:600;
+     text-transform:uppercase;letter-spacing:.08em}
+  p{margin:0 0 8px}
+  button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);
+         border-radius:8px;padding:7px 11px;cursor:pointer;min-height:36px}
+  button:hover:not(:disabled){border-color:var(--accent)}
+  button:focus-visible,input:focus-visible,summary:focus-visible,th:focus-visible,tr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.on{background:rgba(109,179,238,.20);border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+  button.primary:hover:not(:disabled){filter:brightness(1.08)}
+  button.big{width:100%;padding:11px 12px;font-size:16px}
+  button.huge{width:100%;padding:14px 12px;font-size:19px}
+  button.quiet{background:transparent}
+  input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0 0;min-height:22px}
+  .wrap{max-width:1500px;margin:0 auto;padding:0 14px}
+
+  /* ---- header ---- */
+  header.top{border-bottom:1px solid var(--line);background:var(--panel)}
+  header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-top:9px;padding-bottom:9px}
+  .brand .sub{font-size:12.5px;color:var(--muted)}
+  .spacer{flex:1}
+  .chip{font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:5px 10px;
+        background:var(--panel2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .chip b{color:var(--ink)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;border-radius:0;background:transparent;min-height:34px;padding:6px 10px;font-size:13.5px}
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button.on{background:rgba(109,179,238,.22)}
+
+  /* ---- intro ---- */
+  details.intro{margin:10px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 14px}
+  details.intro summary{cursor:pointer;font-weight:700;padding:2px 0}
+  .introgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;margin-top:6px}
+  .introgrid ol{margin:0;padding-left:20px}
+  .introgrid li{margin:0 0 3px}
+  .introgrid p{margin:0 0 4px}
+  .no{color:var(--warn)}
+
+  /* ---- workspace ---- */
+  main.work{display:grid;grid-template-columns:214px minmax(0,1fr) 310px;gap:12px;margin:10px 0 18px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .tools{display:flex;flex-direction:column;gap:12px}
+  .tools .grp{display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;gap:6px;flex-wrap:wrap}
+  .row > button{flex:1 1 0;min-width:0;padding-left:6px;padding-right:6px}
+  label.sl{display:block;font-size:13px;color:var(--muted)}
+  label.sl b{color:var(--ink);font-weight:600;float:right;font-variant-numeric:tabular-nums}
+  label.chk{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--muted);cursor:pointer}
+  kbd{font:11px ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:4px;
+      padding:0 4px;color:var(--muted);margin-left:3px}
+  .keys{font-size:12px;color:var(--muted);line-height:1.6}
+  .tools .grp.keys{display:block}   /* running text: the key caps stay in the line */
+
+  .stage{min-width:0}
+  .view{position:relative;height:clamp(340px,calc(100vh - 262px),820px);background:#000;
+        border:1px solid var(--line);border-radius:10px;overflow:hidden;touch-action:none;
+        user-select:none;-webkit-user-select:none}
+  .view canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+  .view.tool-move canvas{cursor:grab}
+  .view.locked canvas{cursor:default}
+  .view.hidecursor canvas{cursor:none}
+  .badge{position:absolute;font-size:12.5px;padding:3px 8px;border-radius:6px;pointer-events:none;
+         background:rgba(10,14,18,.72);color:var(--ink)}
+  #sliceLabel{left:8px;top:8px}
+  #lockBadge{right:8px;top:8px;border:1px solid var(--agree);color:var(--agree)}
+  #loadBadge{left:50%;top:50%;transform:translate(-50%,-50%);font-size:15px;padding:8px 14px;border:1px solid var(--accent)}
+  .side{position:absolute;top:50%;transform:translateY(-50%);font-weight:700;font-size:13px;
+        color:#ffe9a8;background:rgba(10,14,18,.6);padding:2px 6px;border-radius:5px;pointer-events:none}
+  #sideR{left:6px} #sideL{right:6px}
+  #sideA{position:absolute;left:50%;top:6px;transform:translateX(-50%)}
+  #orientNote{left:8px;bottom:8px;color:var(--muted);font-size:12px}
+  .strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  /* quick tools and free scroll margin next to the picture: only on phones / touch screens (see the end of this style block) */
+  .quick,.touchhint{display:none}
+  .thumb{padding:4px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--panel);min-height:0}
+  .thumb canvas{display:block;border-radius:4px;background:#000}
+  .thumb span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .thumb .dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--muted);flex:0 0 auto}
+  .thumb.painted .dot{background:var(--own);border-color:var(--own)}
+  .thumb.on{border-color:var(--accent);background:rgba(109,179,238,.16)}
+  .thumb.on span{color:var(--ink)}
+
+  /* ---- score panel ---- */
+  .rightcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .score .meta,.meta{font-size:12.5px;color:var(--muted)}
+  .hint{font-size:12.5px;color:var(--muted)}
+  .dicebox{text-align:center;margin:8px 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2)}
+  .dicebox .lab{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .dicebox .val{font-size:50px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+  .dicebox .scope{font-size:12.5px;color:var(--warn)}
+  .verdict{border:1px solid var(--line);border-left-width:5px;border-radius:10px;padding:8px 10px;margin:0 0 10px;background:var(--panel2)}
+  .verdict .head{font-size:17px;font-weight:800;line-height:1.25}
+  .verdict .nums{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+  .verdict .nums b{color:var(--ink)}
+  .verdict.win{border-color:var(--agree)}
+  .verdict.lose{border-color:var(--warn)}
+  .verdict.tie{border-color:var(--accent)}
+  dl.kv{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:0 0 10px;font-size:14px}
+  dl.kv dt{color:var(--muted)} dl.kv dt small{display:block;font-size:11.5px}
+  dl.kv dd{margin:0;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .formula{font:13px ui-monospace,Menlo,Consolas,monospace;background:#11161b;border:1px solid var(--line);
+           border-radius:8px;padding:8px;margin:0 0 10px;overflow-wrap:anywhere}
+  .formula b{color:var(--ink)}
+  ul.legend{list-style:none;margin:0 0 10px;padding:0;font-size:13.5px}
+  ul.legend li{display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:center;margin:0 0 4px}
+  ul.legend i{width:14px;height:14px;border-radius:3px;display:inline-block}
+  ul.legend small{color:var(--muted)}
+  ul.legend b{font-variant-numeric:tabular-nums}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;vertical-align:bottom}
+  th:first-child,td:first-child{text-align:left}
+  table.slices{margin:0 0 10px}
+  table.slices td,table.slices th{padding:3px 6px}
+  table.slices tr.total td{font-weight:800;border-bottom:0}
+
+  /* ---- my progress ---- */
+  .progress dl.kv{margin-bottom:8px}
+  .hist{position:relative;height:84px;margin:16px 0 2px 26px;border-bottom:1px solid var(--line)}
+  .hist .grid{position:absolute;left:0;right:0;border-top:1px dashed rgba(157,171,185,.25);height:0}
+  .hist .ylab{position:absolute;left:-26px;width:22px;text-align:right;font-size:11px;line-height:14px;height:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .hist .cols{position:absolute;inset:0;display:flex;align-items:stretch;gap:2px}
+  .hist .col{position:relative;flex:1 1 0;max-width:18px;min-width:0;padding:0;border:0;border-radius:0;background:transparent;min-height:0;cursor:pointer}
+  .hist .col:hover{background:rgba(157,171,185,.12)}
+  .hist .col.sel{background:rgba(109,179,238,.18)}
+  .hist .col .fill{position:absolute;left:0;right:0;bottom:0;background:var(--accent);border-radius:4px 4px 0 0;min-height:1px}
+  .hist .col.retry .fill{background:transparent;border:1.5px solid var(--accent);border-bottom:0}
+  .hist .col .tick{position:absolute;left:-1px;right:-1px;height:3px;background:var(--warn);border-radius:2px;transform:translateY(50%)}
+  .histkey{font-size:12px;color:var(--muted);margin:4px 0 6px;line-height:1.7}
+  .histkey i{display:inline-block;vertical-align:middle;margin:0 4px 0 0}
+  .histkey span{white-space:nowrap;margin-right:10px}
+  #histInfo{min-height:1.45em;font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .confirmbox{border:1px solid var(--late);border-radius:10px;padding:10px;margin-top:8px}
+  .confirmbox p{font-size:13.5px}
+
+  /* ---- patient list ---- */
+  .picker{position:fixed;inset:0;z-index:45;background:rgba(5,8,11,.80);display:flex;align-items:center;justify-content:center;padding:12px}
+  .pickerbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:100%;max-width:980px;
+             max-height:100%;display:flex;flex-direction:column;padding:14px}
+  .pickerhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:8px}
+  .pickerhead h2{margin:0;font-size:18px}
+  .tablewrap{overflow:auto;min-height:0;border:1px solid var(--line);border-radius:8px}
+  #pickTable th{position:sticky;top:0;background:var(--panel2);cursor:pointer;user-select:none;-webkit-user-select:none;white-space:nowrap}
+  #pickTable th .arrow{display:inline-block;width:1em;color:var(--accent)}
+  #pickTable th .hs{display:none}                 /* short heading, only on phones */
+  #pickTable tbody tr{cursor:pointer}
+  #pickTable tbody tr:hover{background:rgba(109,179,238,.10)}
+  #pickTable tbody tr.cur{background:rgba(109,179,238,.20)}
+  #pickTable td.scn{white-space:normal;color:var(--muted);font-size:13px;text-align:left}
+  #pickTable th.scn{text-align:left}
+  .load{display:inline-block;min-width:4.6em;text-align:center;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--ink)}
+  .load.small{border-style:dotted} .load.large{border-color:var(--ink);font-weight:700}
+  .donemark{color:var(--agree);font-weight:700}
+
+  /* ---- tutorial ---- */
+  .tut{position:fixed;inset:0;z-index:50;background:rgba(6,8,12,.92);display:flex;align-items:center;justify-content:center;padding:16px}
+  .tutbox{background:#141821;border:1px solid #2a2f3a;border-radius:14px;max-width:1100px;width:100%;max-height:100%;overflow:auto;
+          padding:24px 28px;display:flex;gap:28px;flex-wrap:wrap;align-items:center}
+  .tutbox canvas{width:min(420px,100%);border-radius:10px;background:#000;image-rendering:pixelated}
+  .tuttext{flex:1;min-width:260px;font-size:20px;line-height:1.5;color:#ece9e1}
+  .tutstep{color:#8d929a;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+  .tuttext h2{margin:.2em 0 .4em;font-size:28px}
+  .tutbtns{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+  /* ---- footer, dialog, toast ---- */
+  footer{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:12px 0 26px}
+  footer p{margin:0 0 5px}
+  .modal{position:fixed;inset:0;background:rgba(5,8,11,.72);display:grid;place-items:center;z-index:60;padding:16px}
+  .modalbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:440px;width:100%}
+  .modalbox .row{justify-content:flex-end;margin-top:14px}
+  .modalbox .row button{flex:0 0 auto;padding:8px 14px}
+  #toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--panel2);
+         border:1px solid var(--accent);border-radius:10px;padding:9px 14px;z-index:70;max-width:92vw;font-size:14px}
+  .error{margin:14px 0;padding:12px;border:1px solid var(--extra);border-radius:10px;color:#ffd2c7}
+  .error button{margin-top:8px}
+
+  /* ---- narrower screens: tools on top, score below ---- */
+  @media (max-width: 1040px){
+    main.work{grid-template-columns:minmax(0,1fr) 290px}
+    .tools{grid-column:1 / -1;flex-direction:row;flex-wrap:wrap;gap:10px 18px;align-items:flex-start}
+    .tools .grp{flex:1 1 170px;min-width:150px}
+    .tools .grp.keys{display:none}
+    .view{height:clamp(340px,calc(100vh - 330px),760px)}
+  }
+  @media (max-width: 820px){
+    main.work{grid-template-columns:minmax(0,1fr)}
+    .introgrid{grid-template-columns:1fr}
+    .view{height:min(72vh,110vw)}
+    /* six thumbnails always in one row */
+    .strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+    .thumb{padding:3px}
+    .thumb canvas{width:100% !important;height:auto !important}
+    .thumb span{font-size:11px;gap:3px}
+    .thumb .word{display:none}
+    #pickTable .wide{display:none}
+    .tutbox{padding:16px;gap:14px}
+    .tuttext{font-size:16px}
+    .tuttext h2{font-size:21px}
+    .tutbox canvas{width:min(250px,70%);margin:0 auto}
+  }
+  @media (max-width: 520px){
+    .wrap{padding:0 8px}
+    h1{font-size:17px}
+    .brand .sub{display:none}
+    .tools .grp{flex-basis:100%;min-width:0}
+    .dicebox .val{font-size:44px}
+    .picker{padding:6px}
+    .pickerbox{padding:10px}
+    th,td{padding:6px 5px}
+    /* patient list on a phone: short headings, names may wrap, no sideways scrolling */
+    #pickTable{font-size:13px;table-layout:auto;width:100%}
+    #pickTable th{font-size:12px}
+    #pickTable th .hl{display:none}
+    #pickTable th .hs{display:inline}
+    #pickTable th .arrow{width:auto}
+    #pickTable th .arrow:empty{display:none}
+    #pickTable td:first-child{white-space:normal;overflow-wrap:anywhere}
+    .load{min-width:0;font-size:11px;padding:0 4px}
+  }
+
+  /* ---- phones and touch screens ----
+     The picture takes every touch (one finger paints, two fingers zoom and move), so it must
+     not fill the whole width: a column on its right holds the tools needed while painting and
+     a free margin. A finger that starts in this column scrolls the page as usual. */
+  @media (max-width: 820px), (hover: none) and (pointer: coarse){
+    .viewrow{display:flex;gap:6px;align-items:stretch}
+    .viewrow .view{flex:1 1 auto;min-width:0}
+    .quick{display:flex;flex-direction:column;gap:6px;flex:0 0 58px;width:58px}
+    .quick button{min-height:44px;padding:4px 2px;font-size:13px}
+    .quick button.attn{border-color:var(--warn);color:var(--warn);font-weight:700}
+    .scrollgrip{flex:1 1 0;min-height:56px;border:1px dashed var(--line);border-radius:8px;
+                display:flex;align-items:center;justify-content:center;color:var(--muted);
+                font-size:12px;letter-spacing:.06em;writing-mode:vertical-rl;user-select:none;-webkit-user-select:none;
+                background:repeating-linear-gradient(0deg,transparent 0 7px,rgba(157,171,185,.10) 7px 8px)}
+    .touchhint{display:block;margin:8px 0 0}
+  }
+  /* one column: picture first, then the score, then the sliders */
+  @media (max-width: 820px){
+    .stage{order:1}
+    .rightcol{order:2}
+    .tools{order:3}
+  }
+  /* a phone held sideways (low window): picture first and never taller than the window */
+  @media (max-width: 1040px) and (max-height: 520px){
+    .stage{order:1}
+    .rightcol{order:2}
+    .tools{order:3}
+    .view{height:max(230px,calc(100vh - 20px))}
+  }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <h1>WMH Rater Trainer</h1>
+    <div class="sub">Paint white matter hyperintensities on FLAIR MRI, compare with the expert and with the algorithm</div>
+  </div>
+  <span class="spacer"></span>
+  <span class="chip" id="doneChip" title="Patients you have scored at least once"></span>
+  <button type="button" id="tutBtn" class="quiet">Tutorial</button>
+  <button type="button" id="pickBtn">Choose patient</button>
+</div></header>
+
+<div class="wrap">
+  <div id="fatal" class="error" hidden></div>
+
+  <details class="intro" id="intro">
+    <summary>How to</summary>
+    <div class="introgrid">
+      <ol>
+        <li><b>Paint</b> every white matter hyperintensity (WMH) you see with the brush. Use the eraser to correct and zoom in for small spots.</li>
+        <li><b>Check every slice</b> (thumbnails under the picture), then press <b>Score</b>.</li>
+        <li><b>Compare</b> your mask with the expert's and with the algorithm (BIANCA), then go on with <b>Next patient</b>, as long as you like.</li>
+      </ol>
+      <div>
+        <p><b>What to mark:</b> on FLAIR, WMH are bright spots in the white matter, around the ventricles and in the deep white matter. Mark only WMH, no other lesions.</p>
+        <p class="no"><b>Do not mark:</b> the bright cortex, the choroid plexus inside the ventricles, artefacts. Tricky: the thin bright rim along the ventricles and the caps at their tips.</p>
+        <p class="hint" id="orientText"></p>
+      </div>
+    </div>
+  </details>
+
+  <main class="work" id="work">
+    <aside class="tools card" aria-label="Painting tools">
+      <div class="grp">
+        <h3>Tool</h3>
+        <div class="row" id="toolRow">
+          <button type="button" data-tool="brush" title="Brush (B)">Brush</button>
+          <button type="button" data-tool="eraser" title="Eraser (E)">Eraser</button>
+          <button type="button" data-tool="move" title="Move the picture (M). The right mouse button also moves.">Move</button>
+        </div>
+        <label class="sl" for="brushSize">Brush size <b id="brushVal"></b></label>
+        <input type="range" id="brushSize" min="1" max="30" step="1">
+        <div class="row">
+          <button type="button" id="undo" title="Undo the last stroke (Z)">Undo</button>
+          <button type="button" id="clearSlice" title="Remove your mask on this slice (can be undone)">Clear slice</button>
+        </div>
+      </div>
+      <div class="grp">
+        <h3>View</h3>
+        <div class="row">
+          <button type="button" id="zoomOut" title="Zoom out (-)" aria-label="Zoom out">&minus;</button>
+          <button type="button" id="zoomFit" title="Fit the picture (0)">Fit</button>
+          <button type="button" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
+        </div>
+        <label class="sl" for="bright">Brightness <b id="brightVal"></b></label>
+        <input type="range" id="bright" min="-100" max="100" step="1">
+        <label class="sl" for="contrast">Contrast <b id="contrastVal"></b></label>
+        <input type="range" id="contrast" min="-100" max="100" step="1">
+        <button type="button" id="resetGrey" class="quiet">Reset brightness / contrast</button>
+      </div>
+      <div class="grp">
+        <h3>Mask</h3>
+        <label class="sl" for="opacity">Mask opacity <b id="opacityVal"></b></label>
+        <input type="range" id="opacity" min="10" max="100" step="5">
+        <button type="button" id="toggleMask" title="Hide or show the mask (H)">Hide my mask</button>
+        <label class="chk"><input type="checkbox" id="smooth"> Smooth picture</label>
+      </div>
+      <div class="grp keys">
+        Wheel or pinch: zoom. Right mouse button or Move tool: shift the picture.
+        Keys: <kbd>B</kbd> <kbd>E</kbd> <kbd>M</kbd> tools, <kbd>Z</kbd> undo, <kbd>H</kbd> hide mask,
+        <kbd>[</kbd> <kbd>]</kbd> brush size, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> slice.
+      </div>
+    </aside>
+
+    <section class="stage">
+      <div class="viewrow">
+        <div class="view" id="view">
+          <canvas id="cv" aria-label="MRI slice with your mask"></canvas>
+          <span class="badge" id="sliceLabel"></span>
+          <span class="badge" id="lockBadge" hidden>Scored and locked</span>
+          <span class="side" id="sideR" title="Patient's right">R</span>
+          <span class="side" id="sideL" title="Patient's left">L</span>
+          <span class="side" id="sideA" title="Front of the head (anterior)">front</span>
+          <span class="badge" id="orientNote">Right side of the picture = patient's left</span>
+          <span class="badge" id="loadBadge" hidden>Loading patient ...</span>
+        </div>
+        <!-- phones / touch screens only: the tools needed while painting, right at the picture.
+             A finger that starts in this column scrolls the page. -->
+        <div class="quick" id="quickBar" aria-label="Quick tools next to the picture">
+          <button type="button" data-tool="brush" title="Brush">Brush</button>
+          <button type="button" data-tool="eraser" title="Eraser">Eraser</button>
+          <button type="button" data-tool="move" title="Move the picture with one finger">Move</button>
+          <button type="button" id="quickUndo" title="Undo the last stroke">Undo</button>
+          <button type="button" id="quickFit" title="Fit the picture: show the whole slice">Fit</button>
+          <div class="scrollgrip" aria-hidden="true">scroll page</div>
+        </div>
+      </div>
+      <p class="hint touchhint">One finger paints. Two fingers zoom and move the picture. Swipe on the right margin to scroll the page.</p>
+      <div class="strip" id="strip" aria-label="Slices of this patient"></div>
+    </section>
+
+    <div class="rightcol">
+      <aside class="score card" id="scorePanel" aria-live="polite"></aside>
+      <aside class="progress card" id="progressPanel" aria-label="My progress"></aside>
+    </div>
+  </main>
+
+  <footer>
+    <p><b>Data:</b> MICCAI WMH Segmentation Challenge, Kuijf et al., IEEE TMI 2019,
+      <a href="https://doi.org/10.1109/TMI.2019.2905770" target="_blank" rel="noopener">https://doi.org/10.1109/TMI.2019.2905770</a>;
+      data: <a href="https://doi.org/10.34894/AECRSD" target="_blank" rel="noopener">https://doi.org/10.34894/AECRSD</a>, CC BY-NC 4.0;
+      challenge: <a href="https://wmh.isi.uu.nl/" target="_blank" rel="noopener">https://wmh.isi.uu.nl/</a>.
+      The pictures here are single slices derived from the 110 test scans (cropped, 8 bit).</p>
+    <p id="footCases"></p>
+    <p id="footSoftware"></p>
+    <p><b>For teaching only. Not a medical device</b>, not for diagnosis or any clinical decision.</p>
+    <p id="footStorage"></p>
+  </footer>
+</div>
+
+<!-- patient list -->
+<div class="picker" id="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+  <div class="pickerbox">
+    <div class="pickerhead">
+      <h2 id="pickTitle">Choose a patient</h2>
+      <div class="seg" id="pickLoad" role="group" aria-label="Lesion load">
+        <button type="button" data-load="all">All</button>
+        <button type="button" data-load="small" title="WMH volume below 5 ml">Small</button>
+        <button type="button" data-load="medium" title="WMH volume 5 to 15 ml">Medium</button>
+        <button type="button" data-load="large" title="WMH volume 15 ml or more">Large</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="pickHideDone"> Hide done</label>
+      <span class="spacer"></span>
+      <button type="button" id="pickRandom">Random patient</button>
+      <button type="button" id="pickClose" class="quiet">Close</button>
+    </div>
+    <p class="hint" id="pickNote"></p>
+    <div class="tablewrap"><table id="pickTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- tutorial -->
+<div class="tut" id="tut" hidden role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+  <div class="tutbox">
+    <canvas id="tutCv"></canvas>
+    <div class="tuttext">
+      <div class="tutstep" id="tutStep"></div>
+      <h2 id="tutTitle"></h2><div id="tutText"></div>
+      <div class="tutbtns">
+        <button type="button" id="tutBack" class="quiet">Back</button><button type="button" id="tutNext" class="primary">Next</button>
+        <button type="button" id="tutSkip" class="quiet">Skip tutorial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modalbox">
+    <h2 id="modalTitle"></h2>
+    <p id="modalText"></p>
+    <div class="row">
+      <button type="button" id="modalCancel">Cancel</button>
+      <button type="button" id="modalOk" class="primary">OK</button>
+    </div>
+  </div>
+</div>
+<div id="toast" hidden role="status"></div>
+
+<!-- The small index of all patients. The pictures of ONE patient are loaded later, as a script
+     (not fetch), only when that patient is opened: so the page also works from file:// -->
+<script src="data/cases.js"></script>
+
+<script>
+"use strict";
+/* ==========================================================================
+   Small settings
+   ========================================================================== */
+const STORAGE_KEY = "wmh-rater-trainer-v1";    // own key: other pages on the same web address keep theirs
+const HISTORY_KEPT = 30;                       // scores kept for the history strip
+const HISTORY_SHOWN = 20;                      // scores shown in the history strip
+const ALGO = "BIANCA";                         // name of the automatic method
+const COLORS = {                       // red, green, blue
+  own:     [255, 176,   0],            // your mask while painting
+  agree:   [  0, 214, 143],            // mask and expert
+  missed:  [ 77, 163, 255],            // only the expert (false negative)
+  extra:   [255,  90,  54],            // only the mask (false positive)
+  ignored: [170, 170, 180],            // other pathology, not scored
+};
+const INDEX = window.WMH_INDEX || null;                    // data/cases.js
+const ROWS = INDEX && Array.isArray(INDEX.cases) ? INDEX.cases : [];
+const ROW_BY_ID = {};
+for (const r of ROWS) ROW_BY_ID[r.id] = r;
+const ALL_IDS = ROWS.map(r => r.id);
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const nameOf = id => String(id).replace(/_/g, " ");        // "Amsterdam_GE3T_112" -> "Amsterdam GE3T 112"
+
+/* ==========================================================================
+   State
+   ========================================================================== */
+const state = {
+  id: null,                 // patient on the screen
+  slice: 0,                 // slice on the screen (0 .. number of slices - 1)
+  scored: false,            // this patient is scored and locked
+  masks: [],                // your mask per slice (Uint8Array or null)
+  showAlgo: false,          // after scoring: overlay shows the algorithm's mask instead of yours
+  tool: "brush",            // "brush" | "eraser" | "move"
+  brushMm: 4,               // brush diameter in millimetres
+  opacity: 55,              // mask opacity in percent
+  bright: 0, contrast: 0,   // -100 .. 100
+  showMask: true,
+  smooth: false,
+  tutorialSeen: false,
+  progress: emptyProgress(),
+};
+// The settings of a fresh first load. "Reset my progress" goes back to exactly these.
+const FRESH_SETTINGS = { tool: state.tool, brushMm: state.brushMm, opacity: state.opacity, bright: 0, contrast: 0,
+                         showMask: true, smooth: false, showAlgo: false };
+let CASE = null;                       // data of the patient on the screen (from data/case_<id>.js)
+let pictures = [];                     // pictures[slice] = Uint8Array of grey values
+let refCache = [];                     // decoded expert / other pathology / algorithm masks per slice
+let undoStack = [];
+let score = null, algoScore = null;    // filled when the patient is scored
+let storageWorks = true;
+let loading = false;                   // a patient file is being loaded
+
+// patients : id -> { first, best, tries, beat, algo }   (first = Dice of the first try)
+// history  : the last scores, oldest first: { id, dice, algo, retry }
+// round    : patients scored in the running round ("Next patient" does not repeat them)
+function emptyProgress(){ return { patients: {}, history: [], round: [] }; }
+function getMask(pos, create){
+  if (!state.masks[pos] && create) state.masks[pos] = new Uint8Array(CASE.width * CASE.height);
+  return state.masks[pos];
+}
+function countVoxels(mask){ let n = 0; if (mask) for (let i = 0; i < mask.length; i++) n += mask[i]; return n; }
+function paintedSlices(){ return CASE ? CASE.slices.filter((s, pos) => countVoxels(state.masks[pos]) > 0).length : 0; }
+
+/* ==========================================================================
+   Run-length coding: [start, length, start, length, ...]
+   ========================================================================== */
+function rleDecode(runs, n){
+  const mask = new Uint8Array(n);
+  for (let i = 0; i + 1 < runs.length; i += 2){
+    const start = runs[i], len = runs[i + 1];
+    if (!(Number.isInteger(start) && Number.isInteger(len) && start >= 0 && len > 0 && start + len <= n)) throw new Error("bad run");
+    mask.fill(1, start, start + len);
+  }
+  return mask;
+}
+function rleEncode(mask){
+  const runs = [];
+  let i = 0;
+  const n = mask.length;
+  while (i < n){
+    if (mask[i]){ let j = i; while (j < n && mask[j]) j++; runs.push(i, j - i); i = j; }
+    else i++;
+  }
+  return runs;
+}
+function refMask(pos){
+  if (!refCache[pos]){
+    const n = CASE.width * CASE.height, s = CASE.slices[pos];
+    refCache[pos] = { ref: rleDecode(s.ref, n), ignore: rleDecode(s.ignore || [], n), algo: rleDecode(s.bianca || [], n) };
+  }
+  return refCache[pos];
+}
+
+/* ==========================================================================
+   Saving and loading (localStorage). Every access is in try/catch: the page
+   also works when storage is blocked, it then simply forgets on reload.
+   ========================================================================== */
+function save(){
+  try {
+    const out = {
+      v: 1,
+      settings: { tool: state.tool, brushMm: state.brushMm, opacity: state.opacity, smooth: state.smooth,
+                  tutorialSeen: state.tutorialSeen },
+      current: CASE ? { id: state.id, w: CASE.width, h: CASE.height, slice: state.slice, scored: state.scored,
+                        masks: CASE.slices.map((s, pos) => (state.masks[pos] ? rleEncode(state.masks[pos]) : null)) } : null,
+      progress: state.progress,
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
+    storageWorks = true;
+  } catch (err){ storageWorks = false; }
+  showStorageNote();
+}
+const isDice = v => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1;
+// Read what was saved. Everything is checked: a save from an older version of the page, from
+// another page or a damaged one never breaks the page; what does not fit is simply dropped.
+// Returns the saved "current patient" (still unchecked, see restoreCurrent) or null.
+function load(){
+  let saved = null;
+  try { saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null"); }
+  catch (err){ storageWorks = false; saved = null; }
+  if (!saved || typeof saved !== "object" || saved.v !== 1) return null;
+  try {
+    const st = saved.settings && typeof saved.settings === "object" ? saved.settings : {};
+    if (["brush", "eraser", "move"].includes(st.tool)) state.tool = st.tool;
+    if (st.brushMm >= 1 && st.brushMm <= 30) state.brushMm = Math.round(st.brushMm);
+    if (st.opacity >= 10 && st.opacity <= 100) state.opacity = Math.round(st.opacity);
+    state.smooth = st.smooth === true;
+    state.tutorialSeen = st.tutorialSeen === true;
+  } catch (err){ /* keep the defaults */ }
+  try {
+    const from = saved.progress && typeof saved.progress === "object" ? saved.progress : {};
+    const progress = emptyProgress();
+    const pats = from.patients && typeof from.patients === "object" ? from.patients : {};
+    for (const id of Object.keys(pats)){
+      const p = pats[id];
+      if (!ROW_BY_ID[id] || !p || !isDice(p.first)) continue;          // a patient that is not on this page
+      const algo = ROW_BY_ID[id].biancaDice;
+      progress.patients[id] = { first: p.first, best: isDice(p.best) ? Math.max(p.best, p.first) : p.first,
+                                tries: p.tries >= 1 ? Math.floor(p.tries) : 1, beat: verdictOf(p.first, algo) === "win", algo };
+    }
+    if (Array.isArray(from.history)){
+      for (const h of from.history){
+        if (h && ROW_BY_ID[h.id] && isDice(h.dice) && isDice(h.algo))
+          progress.history.push({ id: h.id, dice: h.dice, algo: h.algo, retry: h.retry === true });
+      }
+      progress.history = progress.history.slice(-HISTORY_KEPT);
+    }
+    if (Array.isArray(from.round)){
+      for (const id of from.round) if (ROW_BY_ID[id] && progress.patients[id] && !progress.round.includes(id)) progress.round.push(id);
+    }
+    state.progress = progress;
+  } catch (err){ state.progress = emptyProgress(); }
+  return saved.current && typeof saved.current === "object" ? saved.current : null;
+}
+// Put the saved masks of the patient on the screen back, if they fit to this patient.
+function restoreCurrent(cur){
+  try {
+    if (!cur || cur.id !== state.id || cur.w !== CASE.width || cur.h !== CASE.height) return;
+    if (!Array.isArray(cur.masks) || cur.masks.length !== CASE.slices.length) return;
+    const n = CASE.width * CASE.height;
+    const masks = cur.masks.map(runs => (Array.isArray(runs) && runs.length ? rleDecode(runs, n) : null));
+    state.masks = masks;
+    state.slice = clamp(cur.slice | 0, 0, CASE.slices.length - 1);
+    state.scored = cur.scored === true;
+  } catch (err){
+    state.masks = CASE.slices.map(() => null); state.slice = 0; state.scored = false;   // damaged save: empty slices
+  }
+}
+function showStorageNote(){
+  $("footStorage").textContent = storageWorks
+    ? "Your masks and scores are saved in this browser only (nothing is uploaded)."
+    : "This browser blocks local storage: your progress is lost when the page is reloaded.";
+}
+
+/* ==========================================================================
+   Scoring
+   TP = marked by the mask AND by the expert   (hit)
+   FP = marked only by the mask                (extra)
+   FN = marked only by the expert              (missed)
+   Voxels of "other pathology" are ignored: neither right nor wrong.
+   who = "own" (your mask) or "algo" (the algorithm's mask).
+   ========================================================================== */
+function countSlice(pos, who){
+  const { ref, ignore, algo } = refMask(pos);
+  const mask = who === "algo" ? algo : state.masks[pos];
+  let tp = 0, fp = 0, fn = 0, ignoredPainted = 0;
+  for (let i = 0; i < ref.length; i++){
+    const o = mask ? mask[i] : 0;
+    if (ignore[i]){ ignoredPainted += o; continue; }
+    if (o && ref[i]) tp++; else if (o) fp++; else if (ref[i]) fn++;
+  }
+  return { tp, fp, fn, ignoredPainted };
+}
+function computeScore(who){
+  let tp = 0, fp = 0, fn = 0, ignoredPainted = 0;
+  const perSlice = [];
+  for (let pos = 0; pos < CASE.slices.length; pos++){
+    const c = countSlice(pos, who), d = 2 * c.tp + c.fp + c.fn;
+    tp += c.tp; fp += c.fp; fn += c.fn; ignoredPainted += c.ignoredPainted;
+    perSlice.push(d ? 2 * c.tp / d : null);
+  }
+  const denominator = 2 * tp + fp + fn;
+  return {
+    tp, fp, fn, ignoredPainted, perSlice, nSlices: CASE.slices.length,
+    dice: denominator ? 2 * tp / denominator : null,
+    sensitivity: tp + fn ? tp / (tp + fn) : null,
+    precision: tp + fp ? tp / (tp + fp) : null,
+    ownMl: (tp + fp) * CASE.voxelMl,
+    refMl: (tp + fn) * CASE.voxelMl,
+  };
+}
+function refreshScores(){
+  score = CASE && state.scored ? computeScore("own") : null;
+  algoScore = CASE && state.scored ? computeScore("algo") : null;
+}
+// "win" | "lose" | "tie": compared as shown, with 3 decimals
+function verdictOf(own, algo){
+  const a = Math.round((own || 0) * 1000), b = Math.round((algo || 0) * 1000);
+  return a > b ? "win" : a < b ? "lose" : "tie";
+}
+
+/* ==========================================================================
+   Number formatting
+   ========================================================================== */
+const f3 = v => (v === null || v === undefined ? "n/a" : v.toFixed(3));
+const f2 = v => (v === null || v === undefined ? "n/a" : v.toFixed(2));
+const pct = v => (v === null || v === undefined ? "n/a" : Math.round(v * 100) + " %");
+const ml = v => v.toFixed(2) + " ml";
+
+/* ==========================================================================
+   Drawing
+   ========================================================================== */
+const cv = $("cv"), ctx = cv.getContext("2d"), viewEl = $("view");
+const baseCanvas = document.createElement("canvas");   // grey picture, one pixel per voxel
+const maskCanvas = document.createElement("canvas");   // mask colours, one pixel per voxel
+const view = { zoom: 1, panX: 0, panY: 0 };
+let viewW = 0, viewH = 0, dpr = 1;
+let hover = null;            // pointer position over the picture (for the brush ring)
+let drawQueued = false;
+
+// Where is the picture on the screen?  px, py = screen pixels per voxel.
+function geometry(){
+  const c = CASE;
+  const [mmX, mmY] = c.voxelMm;
+  const fit = 0.97 * Math.min(viewW / (c.width * mmX), viewH / (c.height * mmY));
+  const pxPerMm = fit * view.zoom;
+  const px = pxPerMm * mmX, py = pxPerMm * mmY;
+  return { px, py, pxPerMm,
+           ox: (viewW - c.width * px) / 2 + view.panX,
+           oy: (viewH - c.height * py) / 2 + view.panY };
+}
+// Zoom limit: at the deepest zoom the shorter side of the picture area still shows about
+// MIN_VISIBLE_MM millimetres of the head (about 25 voxels), not just a handful of huge voxels.
+const MIN_VISIBLE_MM = 24;
+function maxZoom(){
+  const c = CASE;
+  if (!c || !viewW || !viewH) return 1;
+  const [mmX, mmY] = c.voxelMm;
+  const fit = 0.97 * Math.min(viewW / (c.width * mmX), viewH / (c.height * mmY));
+  return clamp(Math.min(viewW, viewH) / (MIN_VISIBLE_MM * fit), 2, 16);
+}
+// Pan limit: the picture can never leave the picture area. A picture larger than the area
+// can be shifted until its edge is a quarter of the area inside; a smaller one stays fully visible.
+function clampPan(){
+  const c = CASE;
+  if (!c) return;
+  view.zoom = clamp(view.zoom, 1, maxZoom());
+  const g = geometry();
+  const limX = Math.max(0, (c.width * g.px - viewW) / 2) + 0.25 * viewW;
+  const limY = Math.max(0, (c.height * g.py - viewH) / 2) + 0.25 * viewH;
+  view.panX = clamp(view.panX, -limX, limX);
+  view.panY = clamp(view.panY, -limY, limY);
+}
+function zoomAt(mx, my, factor){
+  if (!CASE) return;
+  const before = geometry();
+  const vx = (mx - before.ox) / before.px, vy = (my - before.oy) / before.py;
+  view.zoom = clamp(view.zoom * factor, 1, maxZoom());
+  if (view.zoom === 1){ view.panX = 0; view.panY = 0; }
+  else {
+    const g = geometry();
+    view.panX += mx - (g.ox + vx * g.px);
+    view.panY += my - (g.oy + vy * g.py);
+  }
+  clampPan(); requestDraw();
+}
+function fitView(){ view.zoom = 1; view.panX = 0; view.panY = 0; requestDraw(); }
+function isFitted(){ return view.zoom === 1 && view.panX === 0 && view.panY === 0; }
+// Keep the labels at the top of the picture apart. On a narrow picture (phone) the caption is
+// almost as wide as the picture: then the lock badge and "front" move below it.
+function layoutBadges(){
+  const label = $("sliceLabel"), front = $("sideA"), lock = $("lockBadge");
+  front.style.top = ""; lock.style.top = "";
+  if (!viewW) return;
+  const touching = (a, b) => {
+    const p = a.getBoundingClientRect(), q = b.getBoundingClientRect();
+    return p.left < q.right + 6 && q.left < p.right + 6 && p.top < q.bottom + 3 && q.top < p.bottom + 3;
+  };
+  if (!lock.hidden && touching(lock, label)) lock.style.top = (label.offsetTop + label.offsetHeight + 4) + "px";
+  if (touching(front, label)) front.style.top = (label.offsetTop + label.offsetHeight + 4) + "px";
+  if (!lock.hidden && touching(front, lock)) front.style.top = (lock.offsetTop + lock.offsetHeight + 4) + "px";
+}
+
+// Brightness / contrast as a lookup table for the 256 grey values.
+function greyTable(){
+  const gain = Math.pow(2, state.contrast / 50);        // 0.25 .. 4
+  const shift = state.bright * 1.28;
+  const table = new Uint8ClampedArray(256);
+  for (let v = 0; v < 256; v++) table[v] = (v - 128) * gain + 128 + shift;
+  return table;
+}
+function drawBase(){
+  const c = CASE, grey = pictures[state.slice];
+  baseCanvas.width = c.width; baseCanvas.height = c.height;
+  const img = new ImageData(c.width, c.height), d = img.data, table = greyTable();
+  for (let i = 0, j = 0; i < grey.length; i++, j += 4){
+    const v = table[grey[i]];
+    d[j] = v; d[j + 1] = v; d[j + 2] = v; d[j + 3] = 255;
+  }
+  baseCanvas.getContext("2d").putImageData(img, 0, 0);
+}
+// Colour of one voxel: [r, g, b] or null. Before scoring only your own mask
+// is shown; after scoring hit, missed and extra.
+function voxelColor(own, ref, ignore, scored){
+  if (!scored) return own ? COLORS.own : null;
+  if (ignore) return COLORS.ignored;
+  if (own && ref) return COLORS.agree;
+  if (ref) return COLORS.missed;
+  if (own) return COLORS.extra;
+  return null;
+}
+// The mask that is compared with the expert in the overlay: yours, or the algorithm's.
+function shownMask(pos){
+  return state.scored && state.showAlgo ? refMask(pos).algo : getMask(pos, false);
+}
+function fillMaskImage(pos, img){
+  const scored = state.scored;
+  const own = shownMask(pos);
+  const r = scored ? refMask(pos) : null;
+  const d = img.data;
+  for (let i = 0, j = 0; i < img.width * img.height; i++, j += 4){
+    const col = voxelColor(own ? own[i] : 0, r ? r.ref[i] : 0, r ? r.ignore[i] : 0, scored);
+    if (col){ d[j] = col[0]; d[j + 1] = col[1]; d[j + 2] = col[2]; d[j + 3] = 255; }
+    else d[j + 3] = 0;
+  }
+}
+function drawMask(){
+  const c = CASE;
+  maskCanvas.width = c.width; maskCanvas.height = c.height;
+  const img = new ImageData(c.width, c.height);
+  fillMaskImage(state.slice, img);
+  maskCanvas.getContext("2d").putImageData(img, 0, 0);
+}
+function requestDraw(){
+  if (drawQueued) return;
+  drawQueued = true;
+  requestAnimationFrame(() => { drawQueued = false; drawMain(); });
+}
+function drawMain(){
+  if (!CASE || !viewW) return;
+  const c = CASE, g = geometry();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, viewW, viewH);
+  const w = c.width * g.px, h = c.height * g.py;
+  ctx.imageSmoothingEnabled = state.smooth;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(baseCanvas, g.ox, g.oy, w, h);
+  if (state.showMask){
+    ctx.imageSmoothingEnabled = false;          // the mask is never smoothed: one sharp square per voxel
+    ctx.globalAlpha = state.opacity / 100;
+    ctx.drawImage(maskCanvas, g.ox, g.oy, w, h);
+    ctx.globalAlpha = 1;
+  }
+  // brush ring under the pointer
+  const painting = state.tool !== "move" && !state.scored;
+  if (hover && painting){
+    const radius = Math.max(2, state.brushMm / 2 * g.pxPerMm);
+    ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.7)";
+    ctx.beginPath(); ctx.arc(hover.x, hover.y, radius, 0, 2 * Math.PI); ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = state.tool === "eraser" ? "#ffffff" : "#ffd27a";
+    ctx.setLineDash(state.tool === "eraser" ? [4, 3] : []);
+    ctx.beginPath(); ctx.arc(hover.x, hover.y, radius, 0, 2 * Math.PI); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  viewEl.classList.toggle("hidecursor", !!hover && painting);
+  $("quickFit").classList.toggle("attn", !isFitted());      // phone: "Fit" lights up while the picture is zoomed or shifted
+}
+function resizeCanvas(){
+  viewW = viewEl.clientWidth; viewH = viewEl.clientHeight;
+  dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(1, Math.round(viewW * dpr));
+  cv.height = Math.max(1, Math.round(viewH * dpr));
+  if (CASE){ clampPan(); drawMain(); layoutBadges(); }
+}
+
+/* ==========================================================================
+   Painting (in voxel coordinates)
+   ========================================================================== */
+let gesture = null;                    // the stroke, pan or pinch that is going on
+const pointers = new Map();            // all pointers that are down
+
+function screenToVoxel(clientX, clientY){
+  const rect = cv.getBoundingClientRect(), g = geometry();
+  return { vx: (clientX - rect.left - g.ox) / g.px, vy: (clientY - rect.top - g.oy) / g.py,
+           x: clientX - rect.left, y: clientY - rect.top };
+}
+// Set all voxels whose centre lies inside the brush circle (measured in mm,
+// so the brush is round on the screen even when voxels are not square).
+function stamp(st, vx, vy){
+  const c = CASE, [mmX, mmY] = c.voxelMm;
+  const r = state.brushMm / 2, r2 = r * r;
+  const cx = Math.floor(vx), cy = Math.floor(vy);
+  const x0 = Math.max(0, Math.floor(vx - r / mmX)), x1 = Math.min(c.width - 1, Math.ceil(vx + r / mmX));
+  const y0 = Math.max(0, Math.floor(vy - r / mmY)), y1 = Math.min(c.height - 1, Math.ceil(vy + r / mmY));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++){
+    const dx = (x + 0.5 - vx) * mmX, dy = (y + 0.5 - vy) * mmY;
+    if (dx * dx + dy * dy > r2 && !(x === cx && y === cy)) continue;   // the voxel under the pointer always counts
+    const i = y * c.width + x;
+    if (st.mask[i] !== st.val){ st.mask[i] = st.val; st.changed.push(i); }
+  }
+}
+function stampLine(st, vx, vy){
+  if (st.last){
+    const dx = vx - st.last.vx, dy = vy - st.last.vy;
+    const steps = Math.ceil(Math.hypot(dx, dy) / 0.5);
+    for (let k = 1; k <= steps; k++) stamp(st, st.last.vx + dx * k / steps, st.last.vy + dy * k / steps);
+  } else stamp(st, vx, vy);
+  st.last = { vx, vy };
+}
+function startStroke(e){
+  const pos = state.slice;
+  gesture = { kind: "stroke", id: e.pointerId, pos, val: state.tool === "eraser" ? 0 : 1,
+              mask: getMask(pos, true), changed: [], last: null };
+  const p = screenToVoxel(e.clientX, e.clientY);
+  stampLine(gesture, p.vx, p.vy);
+  drawMask(); requestDraw();
+}
+function endStroke(keep){
+  const st = gesture; gesture = null;
+  if (!st || st.kind !== "stroke") return;
+  if (!keep){                                    // a second finger came down: take the stroke back
+    for (const i of st.changed) st.mask[i] = 1 - st.val;
+  } else if (st.changed.length){
+    pushUndo({ pos: st.pos, val: st.val, changed: Uint32Array.from(st.changed) });
+    save();
+  }
+  drawMask(); requestDraw(); renderStrip(); renderScorePanel(); renderTools();
+}
+function pushUndo(entry){
+  undoStack.push(entry);
+  if (undoStack.length > 200) undoStack.shift();
+}
+function undo(){
+  if (!CASE || state.scored || loading) return;
+  const entry = undoStack.pop();
+  if (!entry) return;
+  const mask = getMask(entry.pos, true);
+  for (const i of entry.changed) mask[i] = 1 - entry.val;
+  state.slice = entry.pos;                       // jump to the slice of that stroke
+  save(); renderCase();
+}
+function clearSlice(){
+  if (!CASE || state.scored || loading) return;
+  const pos = state.slice, mask = getMask(pos, false);
+  if (!mask) return;
+  const changed = [];
+  for (let i = 0; i < mask.length; i++) if (mask[i]){ changed.push(i); mask[i] = 0; }
+  if (!changed.length) return;
+  pushUndo({ pos, val: 0, changed: Uint32Array.from(changed) });
+  save(); renderCase();
+  toast("Slice cleared. Undo brings it back.");
+}
+
+function touchPoints(){ return [...pointers.values()].filter(p => p.type === "touch"); }
+// Two fingers on the picture: the distance between the fingers zooms, the point between them
+// moves the picture, both at the same time. Every move continues from the last one, so nothing
+// "piles up" when a zoom or pan limit is reached.
+function startPinch(){
+  const [a, b] = touchPoints();
+  gesture = { kind: "pinch", dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+              mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+}
+function movePinch(){
+  const pts = touchPoints();
+  if (pts.length < 2) return;
+  const [a, b] = pts, rect = cv.getBoundingClientRect();
+  const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const before = geometry();                    // voxel that was between the fingers a moment ago
+  const vx = (gesture.mx - rect.left - before.ox) / before.px, vy = (gesture.my - rect.top - before.oy) / before.py;
+  view.zoom = clamp(view.zoom * dist / gesture.dist, 1, maxZoom());
+  const g = geometry();                         // keep that voxel between the fingers
+  view.panX += (mx - rect.left) - (g.ox + vx * g.px);
+  view.panY += (my - rect.top) - (g.oy + vy * g.py);
+  gesture.dist = dist; gesture.mx = mx; gesture.my = my;
+  clampPan(); requestDraw();
+}
+
+cv.addEventListener("pointerdown", e => {
+  if (!CASE || loading) return;
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch (err){ /* older browsers */ }
+  if (e.pointerType === "touch" && e.isPrimary && touchPoints().length){
+    // a first finger arrives while old fingers are still on the books (a "finger up" got lost): forget them
+    if (gesture && gesture.kind === "stroke") endStroke(true);
+    gesture = null;
+    for (const [id, p] of [...pointers]) if (p.type === "touch") pointers.delete(id);
+  }
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
+  if (e.pointerType === "touch" && touchPoints().length === 2){
+    if (gesture && gesture.kind === "stroke") endStroke(false);
+    startPinch();
+    return;
+  }
+  if (gesture) return;
+  if (e.button === 2 || e.button === 1 || state.tool === "move"){
+    gesture = { kind: "pan", id: e.pointerId, x: e.clientX, y: e.clientY, panX: view.panX, panY: view.panY };
+  } else if (e.button === 0){
+    if (state.scored){ toast("This patient is scored and locked. Press \"Next patient\", or \"Try this patient again\" to repaint."); return; }
+    startStroke(e);
+  }
+});
+cv.addEventListener("pointermove", e => {
+  if (!CASE) return;
+  if (pointers.has(e.pointerId)){ const p = pointers.get(e.pointerId); p.x = e.clientX; p.y = e.clientY; }
+  if (e.pointerType !== "touch"){ const p = screenToVoxel(e.clientX, e.clientY); hover = { x: p.x, y: p.y }; }
+  if (gesture && gesture.kind === "pinch") movePinch();
+  else if (gesture && gesture.kind === "pan" && gesture.id === e.pointerId){
+    view.panX = gesture.panX + e.clientX - gesture.x;
+    view.panY = gesture.panY + e.clientY - gesture.y;
+    clampPan();
+  } else if (gesture && gesture.kind === "stroke" && gesture.id === e.pointerId){
+    let events = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    if (!events.length) events = [e];
+    for (const ev of events){ const p = screenToVoxel(ev.clientX, ev.clientY); stampLine(gesture, p.vx, p.vy); }
+    drawMask();
+  }
+  requestDraw();
+});
+function pointerEnd(e){
+  pointers.delete(e.pointerId);
+  if (!gesture) return;
+  if (gesture.kind === "stroke" && gesture.id === e.pointerId) endStroke(e.type !== "pointercancel");
+  else if (gesture.kind === "pan" && gesture.id === e.pointerId) gesture = null;
+  else if (gesture.kind === "pinch" && touchPoints().length < 2) gesture = null;
+}
+cv.addEventListener("pointerup", pointerEnd);
+cv.addEventListener("pointercancel", pointerEnd);
+cv.addEventListener("pointerleave", () => { hover = null; requestDraw(); });
+cv.addEventListener("contextmenu", e => e.preventDefault());       // right button = move, no menu
+cv.addEventListener("wheel", e => {
+  if (!CASE) return;
+  e.preventDefault();
+  const rect = cv.getBoundingClientRect();
+  const delta = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+  zoomAt(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-delta * (e.ctrlKey ? 0.01 : 0.0015)));
+}, { passive: false });
+
+/* ==========================================================================
+   Page parts
+   ========================================================================== */
+function renderTools(){
+  const locked = !CASE || state.scored || loading;
+  for (const b of document.querySelectorAll("#toolRow button, #quickBar button[data-tool]")){
+    b.classList.toggle("on", b.dataset.tool === state.tool);
+    b.disabled = locked && b.dataset.tool !== "move";
+  }
+  $("brushSize").value = state.brushMm; $("brushVal").textContent = state.brushMm + " mm";
+  $("brushSize").disabled = locked;
+  $("opacity").value = state.opacity; $("opacityVal").textContent = state.opacity + " %";
+  $("bright").value = state.bright; $("brightVal").textContent = state.bright;
+  $("contrast").value = state.contrast; $("contrastVal").textContent = state.contrast;
+  $("smooth").checked = state.smooth;
+  const word = state.scored ? "overlay" : "my mask";
+  $("toggleMask").textContent = (state.showMask ? "Hide " : "Show ") + word;
+  $("toggleMask").classList.toggle("on", !state.showMask);
+  $("undo").disabled = locked || !undoStack.length;
+  $("quickUndo").disabled = $("undo").disabled;
+  $("clearSlice").disabled = locked || !countVoxels(getMask(state.slice, false));
+  viewEl.classList.toggle("tool-move", state.tool === "move");
+  viewEl.classList.toggle("locked", state.scored && state.tool !== "move");
+}
+function renderStrip(){
+  const c = CASE, n = c.slices.length;
+  const strip = $("strip");
+  const [mmX, mmY] = c.voxelMm, aspect = (c.width * mmX) / (c.height * mmY);
+  const thumbH = 78, thumbW = Math.round(thumbH * aspect);
+  // build the buttons once per patient, afterwards only repaint them
+  if (strip.dataset.key !== state.id){
+    strip.dataset.key = state.id;
+    strip.innerHTML = c.slices.map((s, i) =>
+      `<button type="button" class="thumb" data-slice="${i}" title="Slice ${i + 1} of ${n}">` +
+      `<canvas width="${c.width}" height="${c.height}" style="width:${thumbW}px;height:${thumbH}px;aspect-ratio:${aspect.toFixed(4)}"></canvas>` +
+      `<span><i class="dot"></i><span class="lab"></span></span></button>`).join("");
+  }
+  const scored = state.scored;
+  [...strip.children].forEach((btn, pos) => {
+    const grey = pictures[pos], own = shownMask(pos);
+    const r = scored ? refMask(pos) : null;
+    const tctx = btn.querySelector("canvas").getContext("2d");
+    const img = new ImageData(c.width, c.height), d = img.data;
+    for (let k = 0, j = 0; k < grey.length; k++, j += 4){
+      let red = grey[k], green = grey[k], blue = grey[k];
+      const col = state.showMask ? voxelColor(own ? own[k] : 0, r ? r.ref[k] : 0, r ? r.ignore[k] : 0, scored) : null;
+      if (col){ red = 0.3 * red + 0.7 * col[0]; green = 0.3 * green + 0.7 * col[1]; blue = 0.3 * blue + 0.7 * col[2]; }
+      d[j] = red; d[j + 1] = green; d[j + 2] = blue; d[j + 3] = 255;
+    }
+    tctx.putImageData(img, 0, 0);
+    btn.classList.toggle("on", pos === state.slice);
+    btn.classList.toggle("painted", countVoxels(getMask(pos, false)) > 0);
+    // label: "Slice 3" while painting, the Dice of the slice after scoring
+    const s = scored ? (state.showAlgo ? algoScore : score) : null;
+    btn.querySelector(".lab").innerHTML = s ? `${pos + 1}: <b>${f2(s.perSlice[pos])}</b>` : `<span class="word">Slice </span>${pos + 1}`;
+    btn.title = `Slice ${pos + 1} of ${n}` + (s ? ` · Dice ${f3(s.perSlice[pos])} (${state.showAlgo ? ALGO : "you"})` : "");
+  });
+}
+function renderView(){
+  const c = CASE;
+  $("sliceLabel").textContent = `${nameOf(state.id)} · slice ${state.slice + 1} of ${c.slices.length}` +
+    (state.scored && state.showAlgo ? ` · ${ALGO} vs expert` : state.scored ? " · you vs expert" : "");
+  $("sliceLabel").title = `Slice ${c.slices[state.slice].z + 1} of ${c.nSlicesInScan} of the whole scan`;
+  $("lockBadge").hidden = !state.scored;
+  layoutBadges();
+  drawBase(); drawMask(); requestDraw();
+}
+function hasIgnore(){ return CASE.slices.some(s => (s.ignore || []).length > 0); }
+function renderScorePanel(){
+  if (!CASE) return;
+  const c = CASE, row = ROW_BY_ID[state.id], n = c.slices.length;
+  const seen = state.progress.patients[state.id];
+  let html = `<h2>Patient ${nameOf(state.id)}</h2>` +
+    `<p class="meta">${c.scanner} · voxel ${c.voxelMm.map(v => +v.toFixed(2)).join(" × ")} mm · ${n} slices` +
+    ` · WMH in the whole scan: ${row.wmhMl.toFixed(1)} ml (${row.load} lesion load)</p>`;
+  if (!state.scored){
+    const painted = paintedSlices();
+    html += `<p>Slices with a mask: <b id="paintedCount">${painted} of ${n}</b></p>` +
+      `<div class="stack"><button type="button" class="primary big" data-act="score" id="btnScore">Score</button></div>` +
+      `<p class="hint" style="margin-top:10px">The expert's mask stays hidden until you score. ` +
+      `Scoring locks this patient. Mark only WMH, no other lesions.` +
+      (seen ? ` You scored this patient before (first try ${f3(seen.first)}); only a first try counts for your mean.` : "") + `</p>` +
+      `<div class="row"><button type="button" class="quiet" data-act="clear" id="btnClearAll"${painted ? "" : " disabled"}>Start this patient over</button>` +
+      `<button type="button" class="quiet" data-act="skip" id="btnSkip">Skip to another patient</button></div>`;
+  } else {
+    const s = score, a = algoScore;
+    const verdict = verdictOf(s.dice, a.dice);
+    const head = verdict === "win" ? "You beat the algorithm" : verdict === "lose" ? "The algorithm was better this time" : "A tie with the algorithm";
+    const t = state.showAlgo ? a : s;                      // the numbers that belong to the overlay on the screen
+    const who = state.showAlgo ? ALGO : "you";
+    const sum = 2 * t.tp + t.fp + t.fn;
+    const ratio = t.refMl > 0 ? t.ownMl / t.refMl : null;
+    html += `<div class="dicebox"><div class="lab">Your Dice</div>` +
+      `<div class="val" id="diceValue" data-value="${s.dice === null ? "" : s.dice}">${f3(s.dice)}</div>` +
+      `<div class="scope">over the ${s.nSlices} slices shown here, not the whole brain</div></div>` +
+      `<div class="verdict ${verdict}" id="verdict" data-verdict="${verdict}"><div class="head">${head}</div>` +
+      `<div class="nums">You <b>${f3(s.dice)}</b> · ${ALGO} <b id="algoDice" data-value="${a.dice === null ? "" : a.dice}">${f3(a.dice)}</b> on the same ${s.nSlices} slices</div></div>` +
+      `<div class="stack" style="margin-bottom:12px"><button type="button" class="primary huge" data-act="next" id="btnNext">Next patient</button></div>` +
+      `<table class="slices" id="sliceTable"><thead><tr><th>Slice</th><th>You</th><th>${ALGO}</th></tr></thead><tbody>` +
+      s.perSlice.map((d, i) => `<tr><td>${i + 1}</td><td>${f3(d)}</td><td>${f3(a.perSlice[i])}</td></tr>`).join("") +
+      `<tr class="total"><td>All ${s.nSlices}</td><td>${f3(s.dice)}</td><td>${f3(a.dice)}</td></tr></tbody></table>` +
+      `<div class="stack" style="margin-bottom:10px"><button type="button" data-act="algo" id="btnAlgo" class="${state.showAlgo ? "on" : ""}" aria-pressed="${state.showAlgo}">` +
+      `${state.showAlgo ? "Show my mask again" : "Show the algorithm's mask"}</button></div>` +
+      `<h3>Overlay: ${who} against the expert</h3>` +
+      `<ul class="legend" id="legend">` +
+      `<li><i style="background:var(--agree)"></i><span>Hit <small>(TP, ${who} and the expert)</small></span><b>${t.tp}</b></li>` +
+      `<li><i style="background:var(--missed)"></i><span>Missed <small>(FN, only the expert)</small></span><b>${t.fn}</b></li>` +
+      `<li><i style="background:var(--extra)"></i><span>Extra <small>(FP, only ${who})</small></span><b>${t.fp}</b></li>` +
+      (t.ignoredPainted || hasIgnore() ? `<li><i style="background:var(--ignored)"></i><span>Other pathology <small>(not scored)</small></span><b>${t.ignoredPainted}</b></li>` : "") +
+      `</ul>` +
+      `<dl class="kv">` +
+      `<dt>Sensitivity<small>share of the expert's mask that was found</small></dt><dd id="sensValue" data-value="${t.sensitivity === null ? "" : t.sensitivity}">${pct(t.sensitivity)}</dd>` +
+      `<dt>Precision<small>share of the mask that is right</small></dt><dd id="precValue" data-value="${t.precision === null ? "" : t.precision}">${pct(t.precision)}</dd>` +
+      `<dt>${state.showAlgo ? ALGO + " mask" : "Your mask"}<small>volume on these slices</small></dt><dd id="ownMl" data-value="${t.ownMl}">${ml(t.ownMl)}</dd>` +
+      `<dt>Expert<small>volume on these slices</small></dt><dd id="refMl" data-value="${t.refMl}">${ml(t.refMl)}</dd>` +
+      (ratio === null ? "" : `<dt>Volume / expert volume</dt><dd>${ratio.toFixed(2)}</dd>`) +
+      `</dl>` +
+      `<div class="formula" id="formula" data-tp="${t.tp}" data-fp="${t.fp}" data-fn="${t.fn}">` +
+      `Dice = 2·TP / (2·TP + FP + FN)<br>` +
+      (sum ? `= 2·${t.tp} / (2·${t.tp} + ${t.fp} + ${t.fn})<br>= ${2 * t.tp} / ${sum} = <b>${f3(t.dice)}</b>`
+           : `not defined: nothing was marked`) +
+      `</div>` +
+      `<p class="hint">Counts are voxels. One voxel = ${(c.voxelMl * 1000).toFixed(2)} mm³. ` +
+      `${ALGO} is an automatic method (FSL), trained on the 60 training scans of the same challenge. ` +
+      (row.scannerInTraining ? "" : `<b>This scanner was not among its training scans.</b> `) +
+      `Its Dice over the whole scan of this patient is ${f3(row.biancaDiceWholeScan)}.</p>` +
+      `<div class="stack"><button type="button" class="quiet" data-act="retry" id="btnRetry">Try this patient again</button></div>`;
+  }
+  $("scorePanel").innerHTML = html;
+}
+
+/* ---- my progress ---------------------------------------------------------
+   Mean Dice and "beat the algorithm" count the FIRST try of every patient:
+   after scoring you have seen the expert's mask, so a second try is easier. */
+let resetAsk = false;                  // the "really reset?" box is open
+let histPick = -1;                     // history column that was tapped
+function progressNumbers(){
+  const pats = state.progress.patients, ids = Object.keys(pats);
+  let sum = 0, beat = 0, best = null, bestId = null;
+  for (const id of ids){
+    const p = pats[id];
+    sum += p.first; if (p.beat) beat++;
+    if (best === null || p.best > best){ best = p.best; bestId = id; }
+  }
+  return { done: ids.length, mean: ids.length ? sum / ids.length : null, beat, best, bestId };
+}
+function histText(h){
+  return `${nameOf(h.id)}${h.retry ? " (another try)" : ""}: you ${f3(h.dice)}, ${ALGO} ${f3(h.algo)}`;
+}
+function renderProgress(){
+  const p = progressNumbers(), total = ALL_IDS.length;
+  $("doneChip").innerHTML = `<b>${p.done}</b> of ${total} patients done`;
+  const hist = state.progress.history.slice(-HISTORY_SHOWN);
+  if (histPick >= hist.length) histPick = -1;
+  let html = `<h3>My progress</h3><dl class="kv">` +
+    `<dt>Patients done</dt><dd id="progDone" data-value="${p.done}">${p.done} of ${total}</dd>` +
+    `<dt>Mean Dice<small>first try of every patient</small></dt><dd id="progMean" data-value="${p.mean === null ? "" : p.mean}">${p.mean === null ? "-" : f3(p.mean)}</dd>` +
+    `<dt>Beat the algorithm<small>first tries</small></dt><dd id="progBeat" data-value="${p.beat}">${p.done ? p.beat + " of " + p.done : "-"}</dd>` +
+    `<dt>Best score${p.bestId ? `<small>${nameOf(p.bestId)}</small>` : ""}</dt><dd id="progBest" data-value="${p.best === null ? "" : p.best}">${p.best === null ? "-" : f3(p.best)}</dd>` +
+    `</dl>`;
+  if (hist.length){
+    html += `<h3>Last ${hist.length === 1 ? "score" : hist.length + " scores"} (Dice)</h3>` +
+      `<div class="hist" id="hist" role="img" aria-label="Your last ${hist.length} Dice scores as bars, with the Dice of the algorithm as a mark on every bar">` +
+      [0, 0.5, 1].map(v => `<div class="grid" style="bottom:${v * 100}%"></div><span class="ylab" style="bottom:calc(${v * 100}% - 7px)">${v === 0.5 ? "0.5" : v}</span>`).join("") +
+      `<div class="cols">` +
+      hist.map((h, i) => `<button type="button" class="col${h.retry ? " retry" : ""}${i === histPick ? " sel" : ""}" data-hist="${i}" title="${histText(h)}" aria-label="${histText(h)}">` +
+        `<span class="fill" style="height:${(h.dice * 100).toFixed(1)}%"></span>` +
+        `<span class="tick" style="bottom:${(h.algo * 100).toFixed(1)}%"></span></button>`).join("") +
+      `</div></div>` +
+      `<p class="histkey"><span><i style="width:10px;height:10px;background:var(--accent);border-radius:3px 3px 0 0"></i>your Dice, first try</span>` +
+      `<span><i style="width:10px;height:10px;border:1.5px solid var(--accent);border-radius:3px 3px 0 0"></i>another try</span>` +
+      `<span><i style="width:12px;height:3px;background:var(--warn);border-radius:2px"></i>${ALGO}, same slices</span></p>` +
+      `<p id="histInfo">${histPick >= 0 ? histText(hist[histPick]) : `<span class="hint">Oldest on the left. Point at or tap a bar for the numbers.</span>`}</p>`;
+  } else {
+    html += `<p class="hint" id="histEmpty">No scores yet. Paint the slices of this patient and press Score.</p>`;
+  }
+  html += resetAsk
+    ? `<div class="confirmbox" id="resetBox"><p><b>Remove all your scores?</b> Your progress on this device (patients done, history, best score) and the mask of the patient on the screen are removed. This cannot be undone.</p>` +
+      `<div class="row"><button type="button" data-act="resetNo" id="resetNo">Keep my progress</button>` +
+      `<button type="button" data-act="resetYes" id="resetYes">Yes, reset</button></div></div>`
+    : `<button type="button" class="quiet" data-act="reset" id="resetBtn">Reset my progress</button>`;
+  $("progressPanel").innerHTML = html;
+}
+
+// Show the patient on the screen completely.
+function renderCase(){
+  renderProgress();
+  if (!CASE) return;
+  if (!viewW) resizeCanvas();
+  clampPan();
+  renderTools(); renderStrip(); renderView(); renderScorePanel();
+}
+function setSlice(i){
+  if (!CASE) return;
+  if (gesture && gesture.kind === "stroke") endStroke(true);
+  state.slice = clamp(i, 0, CASE.slices.length - 1);
+  save(); renderTools(); renderStrip(); renderView();
+}
+
+/* ==========================================================================
+   In-page dialog and short messages (no alert / confirm)
+   ========================================================================== */
+let modalResolve = null;
+function ask(title, text, okLabel, cancelLabel){
+  $("modalTitle").textContent = title;
+  $("modalText").textContent = text;
+  $("modalOk").textContent = okLabel;
+  $("modalCancel").textContent = cancelLabel || "Cancel";
+  $("modal").hidden = false;
+  $("modalCancel").focus();
+  return new Promise(resolve => { modalResolve = resolve; });
+}
+function closeModal(answer){
+  $("modal").hidden = true;
+  if (modalResolve){ const r = modalResolve; modalResolve = null; r(answer); }
+}
+$("modalOk").addEventListener("click", () => closeModal(true));
+$("modalCancel").addEventListener("click", () => closeModal(false));
+$("modal").addEventListener("pointerdown", e => { if (e.target === $("modal")) closeModal(false); });
+let toastTimer = 0;
+function toast(text){
+  $("toast").textContent = text; $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $("toast").hidden = true; }, 3500);
+}
+function fatal(text, withButton){
+  $("fatal").textContent = text; $("fatal").hidden = false;
+  if (withButton){
+    const b = document.createElement("button");
+    b.type = "button"; b.id = "fatalRetry"; b.textContent = "Try another patient";
+    b.addEventListener("click", () => { $("fatal").hidden = true; openPatient(pickRandom()); });
+    $("fatal").appendChild(document.createElement("br")); $("fatal").appendChild(b);
+  }
+}
+
+/* ==========================================================================
+   Loading one patient
+   The pictures of a patient are in their own file data/case_<id>.js. It is
+   loaded with a script tag only when the patient is opened, and the data of
+   the patient before is dropped, so the page never holds all 110 patients.
+   ========================================================================== */
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const el = document.createElement("script");
+    el.src = src; el.dataset.caseFile = "1";
+    el.onload = () => resolve(el);
+    el.onerror = () => { el.remove(); reject(new Error("file " + src + " could not be loaded")); };
+    document.head.appendChild(el);
+  });
+}
+// Turn the PNG of one slice into a plain array of grey values.
+function decodePicture(c, pos){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const can = document.createElement("canvas");
+        can.width = c.width; can.height = c.height;
+        const cx = can.getContext("2d");
+        cx.drawImage(img, 0, 0);
+        const rgba = cx.getImageData(0, 0, c.width, c.height).data;
+        const grey = new Uint8Array(c.width * c.height);
+        for (let i = 0; i < grey.length; i++) grey[i] = rgba[i * 4];
+        resolve(grey);
+      } catch (err){ reject(err); }
+    };
+    img.onerror = () => reject(new Error("picture could not be read"));
+    img.src = c.slices[pos].png;
+  });
+}
+async function loadCase(id){
+  window.WMH_CASES = window.WMH_CASES || {};
+  if (!window.WMH_CASES[id]){
+    const el = await loadScript("data/case_" + id + ".js");
+    el.remove();                                  // the data stay in window.WMH_CASES, the tag is not needed any more
+  }
+  const c = window.WMH_CASES[id];
+  if (!c || !Array.isArray(c.slices) || !c.slices.length) throw new Error("data file of " + id + " is empty");
+  const pics = await Promise.all(c.slices.map((s, pos) => decodePicture(c, pos)));
+  return { c, pics };
+}
+// Open a patient. savedCurrent = saved masks to put back (only at the start of the page).
+// Until the new patient is ready, the patient before stays on the screen.
+async function openPatient(id, savedCurrent){
+  if (loading || !ROW_BY_ID[id]) return false;
+  if (gesture && gesture.kind === "stroke") endStroke(true);
+  loading = true;
+  $("loadBadge").textContent = "Loading patient " + nameOf(id) + " ...";
+  $("loadBadge").hidden = false;
+  renderTools();
+  let got = null;
+  try { got = await loadCase(id); }
+  catch (err){
+    loading = false; $("loadBadge").hidden = true;
+    if (CASE){ renderTools(); toast("Patient " + nameOf(id) + " could not be loaded: " + err.message); }
+    else fatal("Patient " + nameOf(id) + " could not be loaded (" + err.message + "). Keep the data folder next to index.html.", true);
+    return false;
+  }
+  // the new patient is ready: swap
+  gesture = null; pointers.clear(); hover = null;
+  CASE = got.c; pictures = got.pics; refCache = []; undoStack = [];
+  state.id = id; state.slice = 0; state.scored = false; state.showAlgo = false; state.showMask = true;
+  state.masks = CASE.slices.map(() => null);
+  if (state.tool === "move") state.tool = "brush";
+  view.zoom = 1; view.panX = 0; view.panY = 0;
+  restoreCurrent(savedCurrent);
+  for (const other of Object.keys(window.WMH_CASES)) if (other !== id) delete window.WMH_CASES[other];   // free the memory
+  refreshScores();
+  loading = false; $("loadBadge").hidden = true; $("fatal").hidden = true; $("work").hidden = false;
+  histPick = -1;
+  save(); renderCase();
+  return true;
+}
+// A random patient that was not scored in the running round and is not on the screen.
+function pickRandom(){
+  const round = state.progress.round;
+  let open = ALL_IDS.filter(id => !round.includes(id) && id !== state.id);
+  if (!open.length && ALL_IDS.every(id => round.includes(id))){
+    state.progress.round = [];                                 // all patients are done: a new round starts
+    open = ALL_IDS.filter(id => id !== state.id);
+    toast(`You have scored all ${ALL_IDS.length} patients. A new round starts.`);
+  }
+  if (!open.length) return null;                               // the patient on the screen is the last one of this round
+  return open[Math.floor(Math.random() * open.length)];
+}
+
+/* ==========================================================================
+   Actions
+   ========================================================================== */
+// Leaving a patient with a mask that is not scored: ask first.
+async function mayLeave(){
+  if (!CASE || state.scored || !paintedSlices()) return true;
+  return ask("Leave this patient?", "Your mask of this patient is not scored yet and will be removed.", "Leave", "Keep painting");
+}
+async function goToPatient(id){
+  if (loading) return false;
+  if (!id){ toast("This is the last patient of this round. Score it to start a new round."); return false; }
+  if (!(await mayLeave())) return false;
+  const ok = await openPatient(id);
+  if (ok) window.scrollTo(0, 0);
+  return ok;
+}
+async function scoreCurrent(){
+  if (!CASE || state.scored || loading) return;
+  const n = CASE.slices.length, empty = n - paintedSlices();
+  const note = empty ? ` ${empty} of ${n} slices have no mask yet.` : "";
+  const yes = await ask("Score this patient?",
+    `The expert's mask is shown and this patient is locked.${note}`, "Score", "Keep painting");
+  if (!yes || !CASE || state.scored) return;
+  if (gesture && gesture.kind === "stroke") endStroke(true);
+  state.scored = true; state.showAlgo = false; state.showMask = true;
+  undoStack = [];
+  refreshScores();
+  // book the result
+  const id = state.id, dice = score.dice === null ? 0 : score.dice, algo = algoScore.dice === null ? 0 : algoScore.dice;
+  const pr = state.progress, before = pr.patients[id];
+  if (before){ before.tries += 1; before.best = Math.max(before.best, dice); }
+  else pr.patients[id] = { first: dice, best: dice, tries: 1, beat: verdictOf(dice, algo) === "win", algo };
+  pr.history.push({ id, dice, algo, retry: !!before });
+  pr.history = pr.history.slice(-HISTORY_KEPT);
+  if (!pr.round.includes(id)) pr.round.push(id);
+  histPick = -1;
+  save(); renderCase();
+  // one column (phone): scroll just far enough that the Dice, the verdict line and the
+  // "Next patient" button are on the screen (never further than the top of the score panel)
+  const next = $("btnNext"), panel = $("scorePanel");
+  if (next){
+    const over = next.getBoundingClientRect().bottom + 14 - window.innerHeight;
+    if (over > 0) window.scrollBy(0, Math.min(over, Math.max(0, panel.getBoundingClientRect().top - 8)));
+  }
+}
+async function retryCurrent(){
+  if (!CASE || loading) return;
+  const yes = await ask("Try this patient again?",
+    "You start with empty slices. Your first score stays in your progress; a better score becomes your best score.", "Try again", "Cancel");
+  if (!yes) return;
+  clearWork();
+  window.scrollTo(0, 0);
+}
+async function clearCurrent(){
+  if (!CASE || loading || state.scored) return;
+  const yes = await ask("Start this patient over?", "Your mask on all slices of this patient is removed.", "Start over", "Cancel");
+  if (!yes) return;
+  clearWork();
+}
+// Empty, unscored slices for the patient on the screen.
+function clearWork(){
+  if (gesture && gesture.kind === "stroke") endStroke(false);
+  gesture = null; pointers.clear(); hover = null;
+  state.masks = CASE.slices.map(() => null);
+  state.slice = 0; state.scored = false; state.showAlgo = false; state.showMask = true;
+  undoStack = []; score = null; algoScore = null;
+  if (state.tool === "move") state.tool = "brush";
+  view.zoom = 1; view.panX = 0; view.panY = 0;
+  save(); renderCase();
+}
+// Back to the state of a fresh first load: no progress, default tools, a new random patient.
+// It never names a fixed patient: the next one is always taken from the list on this page.
+async function resetProgress(){
+  resetAsk = false;
+  state.progress = emptyProgress();
+  Object.assign(state, FRESH_SETTINGS);
+  histPick = -1;
+  if (CASE) clearWork(); else { save(); renderProgress(); }
+  $("intro").open = false;
+  toast("Your progress is reset.");
+  const next = pickRandom();
+  if (next) await openPatient(next);
+  window.scrollTo(0, 0);
+}
+function toggleAlgo(){
+  if (!state.scored) return;
+  state.showAlgo = !state.showAlgo; state.showMask = true;
+  renderTools(); renderStrip(); renderView(); renderScorePanel();
+}
+function toggleMask(){ state.showMask = !state.showMask; renderTools(); if (CASE){ renderStrip(); requestDraw(); } }
+
+$("toolRow").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tool]");
+  if (b && !b.disabled){ state.tool = b.dataset.tool; save(); renderTools(); requestDraw(); }
+});
+function quickAction(b){
+  if (!b || b.disabled) return;
+  if (b.dataset.tool){ state.tool = b.dataset.tool; save(); renderTools(); requestDraw(); }
+  else if (b.id === "quickUndo") undo();
+  else if (b.id === "quickFit") fitView();
+}
+// A finger tap right after a fast swipe on the picture can arrive without a
+// "click" (the browser swallows it). So a short touch on a quick button acts
+// on "pointerup"; a scroll drag ends with "pointercancel" and does nothing.
+let quickTap = null, quickTapAt = -1e9;
+$("quickBar").addEventListener("pointerdown", e => {
+  const b = e.target.closest("button");
+  quickTap = (b && e.pointerType === "touch") ? { id: e.pointerId, b, x: e.clientX, y: e.clientY } : null;
+});
+$("quickBar").addEventListener("pointercancel", () => { quickTap = null; });
+$("quickBar").addEventListener("pointerup", e => {
+  const t = quickTap; quickTap = null;
+  if (!t || t.id !== e.pointerId || e.target.closest("button") !== t.b) return;
+  if (Math.hypot(e.clientX - t.x, e.clientY - t.y) > 12) return;
+  quickTapAt = performance.now();
+  quickAction(t.b);
+});
+$("quickBar").addEventListener("click", e => {
+  if (performance.now() - quickTapAt < 700) return;   // already done on pointerup
+  quickAction(e.target.closest("button"));
+});
+$("brushSize").addEventListener("input", e => { state.brushMm = +e.target.value; save(); renderTools(); requestDraw(); });
+$("opacity").addEventListener("input", e => { state.opacity = +e.target.value; save(); renderTools(); requestDraw(); });
+$("bright").addEventListener("input", e => { state.bright = +e.target.value; renderTools(); if (CASE){ drawBase(); requestDraw(); } });
+$("contrast").addEventListener("input", e => { state.contrast = +e.target.value; renderTools(); if (CASE){ drawBase(); requestDraw(); } });
+$("resetGrey").addEventListener("click", () => { state.bright = 0; state.contrast = 0; renderTools(); if (CASE){ drawBase(); requestDraw(); } });
+$("smooth").addEventListener("change", e => { state.smooth = e.target.checked; save(); requestDraw(); });
+$("toggleMask").addEventListener("click", toggleMask);
+$("undo").addEventListener("click", undo);
+$("clearSlice").addEventListener("click", clearSlice);
+$("zoomIn").addEventListener("click", () => zoomAt(viewW / 2, viewH / 2, 1.4));
+$("zoomOut").addEventListener("click", () => zoomAt(viewW / 2, viewH / 2, 1 / 1.4));
+$("zoomFit").addEventListener("click", fitView);
+$("strip").addEventListener("click", e => { const b = e.target.closest("button[data-slice]"); if (b) setSlice(+b.dataset.slice); });
+$("scorePanel").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]");
+  if (!b || b.disabled) return;
+  if (b.dataset.act === "score") scoreCurrent();
+  if (b.dataset.act === "retry") retryCurrent();
+  if (b.dataset.act === "clear") clearCurrent();
+  if (b.dataset.act === "next" || b.dataset.act === "skip") goToPatient(pickRandom());
+  if (b.dataset.act === "algo") toggleAlgo();
+});
+$("progressPanel").addEventListener("click", e => {
+  const col = e.target.closest("button[data-hist]");
+  if (col){ histPick = histPick === +col.dataset.hist ? -1 : +col.dataset.hist; renderProgress(); return; }
+  const b = e.target.closest("button[data-act]");
+  if (!b) return;
+  if (b.dataset.act === "reset"){ resetAsk = true; renderProgress(); $("resetNo").focus(); }
+  if (b.dataset.act === "resetNo"){ resetAsk = false; renderProgress(); }
+  if (b.dataset.act === "resetYes") resetProgress();
+});
+$("intro").addEventListener("toggle", () => { /* always closed after a reload: nothing to save */ });
+
+window.addEventListener("keydown", e => {
+  if (!$("modal").hidden){ if (e.key === "Escape") closeModal(false); return; }
+  if (!$("picker").hidden){ if (e.key === "Escape") closePicker(); return; }
+  if (!$("tut").hidden){ if (e.key === "Escape") closeTutorial(); return; }
+  if (!CASE || loading || e.altKey) return;
+  const inField = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
+  const key = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && key === "z"){ e.preventDefault(); undo(); return; }
+  if (e.ctrlKey || e.metaKey) return;
+  const locked = state.scored;
+  if (key === "b" && !locked){ state.tool = "brush"; }
+  else if (key === "e" && !locked){ state.tool = "eraser"; }
+  else if (key === "m"){ state.tool = "move"; }
+  else if (key === "z"){ undo(); return; }
+  else if (key === "h"){ toggleMask(); return; }
+  else if (key === "[" || key === "]"){ if (!locked) state.brushMm = clamp(state.brushMm + (key === "]" ? 1 : -1), 1, 30); }
+  else if (key === "+" || key === "="){ zoomAt(viewW / 2, viewH / 2, 1.4); return; }
+  else if (key === "-"){ zoomAt(viewW / 2, viewH / 2, 1 / 1.4); return; }
+  else if (key === "0"){ fitView(); return; }
+  else if ((key === "arrowright" || key === "arrowleft") && !inField){
+    e.preventDefault(); setSlice(state.slice + (key === "arrowright" ? 1 : -1)); return;
+  } else return;
+  save(); renderTools(); requestDraw();
+});
+window.addEventListener("pagehide", () => { if (CASE) save(); });
+
+/* ==========================================================================
+   Patient list ("Choose patient")
+   ========================================================================== */
+const PICK_COLUMNS = [                 // key, heading, extra class, tooltip, short heading (phones)
+  ["id",    "Patient",       "",         "Name of the scan in the challenge data", "Patient"],
+  ["scan",  "Scanner",       "scn wide", "Scanner and site", "Scanner"],
+  ["ml",    "WMH ml",        "",         "WMH volume of the whole scan, from the expert's mask", "ml"],
+  ["load",  "Load",          "",         "Lesion load: small < 5 ml, medium 5 to 15 ml, large 15 ml or more", "Load"],
+  ["algo",  ALGO + " Dice",  "",         "Dice of the algorithm on the slices shown here", ALGO],
+  ["first", "My first",      "",         "Your Dice at the first try", "Mine"],
+  ["best",  "My best",       "wide",     "Your best Dice", "Best"],
+];
+const LOAD_RANK = { small: 0, medium: 1, large: 2 };
+const pick = { load: "all", hideDone: false, sort: "ml", dir: 1 };
+function pickValue(row, key){
+  const p = state.progress.patients[row.id];
+  if (key === "id") return row.id;
+  if (key === "scan") return row.scanner;
+  if (key === "ml") return row.wmhMl;
+  if (key === "load") return LOAD_RANK[row.load] * 1000 + row.wmhMl;
+  if (key === "algo") return row.biancaDice;
+  if (key === "first") return p ? p.first : null;
+  if (key === "best") return p ? p.best : null;
+  return 0;
+}
+function renderPicker(){
+  for (const b of $("pickLoad").querySelectorAll("button")){
+    b.classList.toggle("on", b.dataset.load === pick.load);
+    b.setAttribute("aria-pressed", b.dataset.load === pick.load ? "true" : "false");
+  }
+  $("pickHideDone").checked = pick.hideDone;
+  const done = state.progress.patients;
+  let rows = ROWS.filter(r => (pick.load === "all" || r.load === pick.load) && !(pick.hideDone && done[r.id]));
+  rows = rows.map(r => ({ r, v: pickValue(r, pick.sort) }));
+  rows.sort((a, b) => {
+    if (a.v === null && b.v === null) return a.r.id < b.r.id ? -1 : 1;
+    if (a.v === null) return 1;                    // patients without a score always at the end
+    if (b.v === null) return -1;
+    if (a.v === b.v) return a.r.id < b.r.id ? -1 : 1;
+    return (a.v < b.v ? -1 : 1) * pick.dir;
+  });
+  $("pickTable").querySelector("thead").innerHTML = "<tr>" + PICK_COLUMNS.map(([key, head, cls, tip, short]) => {
+    const arrow = pick.sort === key ? (pick.dir > 0 ? "&#9650;" : "&#9660;") : "";
+    const sorted = pick.sort === key ? ` aria-sort="${pick.dir > 0 ? "ascending" : "descending"}"` : "";
+    return `<th class="${cls}" data-sort="${key}" title="${tip}. Click to sort."${sorted}><span class="hl">${head}</span><span class="hs">${short}</span> <span class="arrow">${arrow}</span></th>`;
+  }).join("") + "</tr>";
+  $("pickTable").querySelector("tbody").innerHTML = rows.map(({ r }) => {
+    const p = done[r.id];
+    const mark = p ? ' <span class="donemark" title="Scored">&#10003;</span>' : "";
+    return `<tr data-id="${r.id}" class="${r.id === state.id ? "cur" : ""}" tabindex="0">` +
+      `<td>${nameOf(r.id)}${mark}</td>` +
+      `<td class="scn wide">${r.scanner}${r.scannerInTraining ? "" : " (new to " + ALGO + ")"}</td>` +
+      `<td>${r.wmhMl.toFixed(1)}</td>` +
+      `<td><span class="load ${r.load}">${r.load}</span></td>` +
+      `<td>${r.biancaDice.toFixed(2)}</td>` +
+      `<td>${p ? p.first.toFixed(2) : ""}</td>` +
+      `<td class="wide">${p ? p.best.toFixed(2) : ""}</td></tr>`;
+  }).join("");
+  const nDone = Object.keys(done).length;
+  $("pickNote").textContent = `${rows.length} of ${ROWS.length} patients shown, ${nDone} scored. ` +
+    `Lesion load by the WMH volume of the whole scan: small below 5 ml, medium 5 to 15 ml, large 15 ml or more. ` +
+    `Click a heading to sort, click a row to open the patient.`;
+}
+function openPicker(){ $("picker").hidden = false; renderPicker(); $("pickClose").focus(); }
+function closePicker(){ $("picker").hidden = true; }
+async function pickPatient(id){
+  closePicker();
+  if (id !== state.id) await goToPatient(id);
+}
+$("pickBtn").addEventListener("click", openPicker);
+$("pickClose").addEventListener("click", closePicker);
+$("picker").addEventListener("pointerdown", e => { if (e.target === $("picker")) closePicker(); });
+$("pickLoad").addEventListener("click", e => {
+  const b = e.target.closest("button[data-load]");
+  if (b){ pick.load = b.dataset.load; renderPicker(); }
+});
+$("pickHideDone").addEventListener("change", e => { pick.hideDone = e.target.checked; renderPicker(); });
+$("pickRandom").addEventListener("click", () => { closePicker(); goToPatient(pickRandom()); });
+$("pickTable").addEventListener("click", e => {
+  const th = e.target.closest("th[data-sort]");
+  if (th){
+    if (pick.sort === th.dataset.sort) pick.dir = -pick.dir;
+    else { pick.sort = th.dataset.sort; pick.dir = (pick.sort === "id" || pick.sort === "scan") ? 1 : -1; }
+    renderPicker(); return;
+  }
+  const tr = e.target.closest("tr[data-id]");
+  if (tr) pickPatient(tr.dataset.id);
+});
+$("pickTable").addEventListener("keydown", e => {
+  const tr = e.target.closest && e.target.closest("tr[data-id]");
+  if (tr && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); pickPatient(tr.dataset.id); }
+});
+
+/* ==========================================================================
+   Tutorial: three short steps with one example slice (data/tutorial.js,
+   loaded only when the tutorial is opened)
+   ========================================================================== */
+const TUT_STEPS = [   // title, text, show the answer?
+  ["What to look for",
+   "<p>This is a FLAIR picture of the brain. <b>White matter hyperintensities (WMH)</b> are the bright spots in the white matter: " +
+   "around the ventricles (the dark chambers in the middle) and in the deep white matter.</p>" +
+   "<p>Look at the picture first: where would you paint?</p>", false],
+  ["The expert's answer",
+   "<p>Yellow: what the expert marked on this slice. Large patches and also very small spots count.</p>" +
+   "<p><b>Do not mark</b> the bright cortex at the edge of the brain, the choroid plexus inside the ventricles or artefacts.</p>", true],
+  ["How it works here",
+   "<p><b>Paint</b> the WMH on all slices of a patient (brush, eraser, wheel or two fingers to zoom), then press <b>Score</b>.</p>" +
+   "<p>You get your <b>Dice</b> score (0 = no overlap, 1 = the same mask as the expert), you see what you hit, missed and painted too much, " +
+   "and how the algorithm (" + ALGO + ") did on the same slices.</p>" +
+   "<p>Then go on with <b>Next patient</b>, as long as you like.</p>", false],
+];
+let tutStep = 0, tutPicture = null, tutLoading = false;
+function drawTutorial(){
+  const t = window.WMH_TUTORIAL, can = $("tutCv");
+  if (!t || !tutPicture){ can.hidden = true; return; }
+  can.hidden = false;
+  can.width = t.width; can.height = t.height;
+  can.style.aspectRatio = (t.width * t.voxelMm[0]) + " / " + (t.height * t.voxelMm[1]);
+  const cx = can.getContext("2d");
+  cx.drawImage(tutPicture, 0, 0);
+  if (TUT_STEPS[tutStep][2]){
+    const img = cx.getImageData(0, 0, t.width, t.height), d = img.data;
+    const ref = rleDecode(t.ref, t.width * t.height);
+    for (let i = 0; i < ref.length; i++){
+      if (!ref[i]) continue;
+      d[i * 4] = Math.round(d[i * 4] * 0.35 + 255 * 0.65);
+      d[i * 4 + 1] = Math.round(d[i * 4 + 1] * 0.35 + 214 * 0.65);
+      d[i * 4 + 2] = Math.round(d[i * 4 + 2] * 0.35 + 60 * 0.65);
+    }
+    cx.putImageData(img, 0, 0);
+  }
+}
+function renderTutorial(){
+  const [title, html] = TUT_STEPS[tutStep];
+  $("tutStep").textContent = `Tutorial, step ${tutStep + 1} of ${TUT_STEPS.length}`;
+  $("tutTitle").textContent = title;
+  $("tutText").innerHTML = html;
+  $("tutBack").disabled = tutStep === 0;
+  $("tutNext").textContent = tutStep === TUT_STEPS.length - 1 ? "Start painting" : "Next";
+  $("tutSkip").hidden = tutStep === TUT_STEPS.length - 1;
+  drawTutorial();
+}
+function openTutorial(){
+  tutStep = 0;
+  $("tut").hidden = false;
+  renderTutorial();
+  $("tutNext").focus();
+  if (tutPicture || tutLoading) return;
+  // the example picture: loaded now, the text is readable in the meantime (and also if the file is missing)
+  tutLoading = true;
+  const showPicture = () => {
+    const t = window.WMH_TUTORIAL;
+    if (!t){ tutLoading = false; return; }
+    const img = new Image();
+    img.onload = () => { tutPicture = img; tutLoading = false; if (!$("tut").hidden) drawTutorial(); };
+    img.onerror = () => { tutLoading = false; };
+    img.src = t.png;
+  };
+  if (window.WMH_TUTORIAL) showPicture();
+  else {
+    const el = document.createElement("script");
+    el.src = "data/tutorial.js";
+    el.onload = showPicture;
+    el.onerror = () => { tutLoading = false; el.remove(); };
+    document.head.appendChild(el);
+  }
+}
+function closeTutorial(){
+  $("tut").hidden = true;
+  if (!state.tutorialSeen){ state.tutorialSeen = true; save(); }
+}
+$("tutBtn").addEventListener("click", openTutorial);
+$("tutBack").addEventListener("click", () => { if (tutStep > 0){ tutStep--; renderTutorial(); } });
+$("tutNext").addEventListener("click", () => {
+  if (tutStep < TUT_STEPS.length - 1){ tutStep++; renderTutorial(); } else closeTutorial();
+});
+$("tutSkip").addEventListener("click", closeTutorial);
+
+/* ==========================================================================
+   Start
+   ========================================================================== */
+function fillFooter(){
+  const lc = INDEX.loadClasses || {};
+  $("footCases").innerHTML = `<b>Patients:</b> the ${ROWS.length} official test scans of the challenge, ${INDEX.slicesPerCase} slices each, ` +
+    `spread over the part of the brain that holds the WMH. <b>Expert mask:</b> the manual WMH mask of the challenge. ` +
+    `Other pathology marked by the challenge (grey in the overlay) is not scored. ` +
+    `<b>Lesion load</b> (a convention of this trainer, by the WMH volume of the whole scan): small ${lc.small}, medium ${lc.medium}, large ${lc.large}. ` +
+    `<b>Algorithm:</b> ${ALGO} (FSL), trained on the ${INDEX.bianca.trainingScans} training scans of the challenge, ` +
+    `probability threshold ${INDEX.bianca.threshold}, clusters of at least ${INDEX.bianca.minClusterVoxels} voxels; ` +
+    `its mean Dice on the slices shown here is ${INDEX.bianca.meanDiceSlices.toFixed(2)}.`;
+  const sw = INDEX.software || {};
+  const list = Object.keys(sw).map(k => k + " " + sw[k]).join(", ");
+  const win = INDEX.window && INDEX.window.percentiles ? INDEX.window.percentiles : null;
+  $("footSoftware").innerHTML = `<b>Data files made with:</b> ${list}` +
+    (win ? `; grey window ${win[0]} to ${win[1]} percentile inside the brain mask` : "") + ".";
+  $("orientText").textContent = "Orientation: radiological view. The right side of the picture is the patient's left side; the front of the head is on top.";
+}
+// ?patient=<id> in the address opens that patient. The address is used only once:
+// after a reload the page comes back to the patient that is open then.
+function patientFromAddress(){
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("patient");
+    if (!id || !ROW_BY_ID[id]) return null;
+    try {
+      params.delete("patient");                              // take it out of the address
+      const rest = params.toString();
+      window.history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+    } catch (err){
+      // a page opened as a file cannot change its address: remember in this tab that it was used
+      const mark = STORAGE_KEY + "-address";
+      try {
+        if (window.sessionStorage.getItem(mark) === id) return null;
+        window.sessionStorage.setItem(mark, id);
+      } catch (err2){ /* no storage: the address is simply used again */ }
+    }
+    return id;
+  } catch (err){ return null; }
+}
+async function start(){
+  if (!INDEX || !ROWS.length){
+    $("work").hidden = true; $("pickBtn").disabled = true;
+    fatal("The patient list (data/cases.js) could not be loaded. Keep the data folder next to index.html.", false);
+    document.documentElement.dataset.ready = "1";
+    return;
+  }
+  fillFooter();
+  const saved = load();                    // settings and progress; "saved" = the patient that was open (unchecked)
+  showStorageNote();
+  resizeCanvas();
+  renderTools(); renderProgress();
+  if (typeof ResizeObserver === "function") new ResizeObserver(resizeCanvas).observe(viewEl);
+  window.addEventListener("resize", resizeCanvas);
+
+  // which patient first? 1. ?patient=<id> in the address  2. the patient that was open  3. a random one
+  const wanted = patientFromAddress();
+  const savedId = saved && typeof saved.id === "string" && ROW_BY_ID[saved.id] ? saved.id : null;
+  let ok = false;
+  if (wanted) ok = await openPatient(wanted, wanted === savedId ? saved : null);
+  else if (savedId) ok = await openPatient(savedId, saved);
+  if (!ok){ $("fatal").hidden = true; $("fatal").textContent = ""; ok = await openPatient(pickRandom()); }
+  document.documentElement.dataset.ready = "1";
+  const isTest = new URLSearchParams(window.location.search).get("test") === "1";
+  if (ok && !state.tutorialSeen && !isTest) openTutorial();
+}
+
+/* ==========================================================================
+   Hook for the automatic page test (build/03_test_page.mjs), only with ?test=1
+   ========================================================================== */
+if (new URLSearchParams(window.location.search).get("test") === "1"){
+  const setAll = fn => {
+    if (state.scored) return false;
+    state.masks = CASE.slices.map((s, pos) => fn(pos));
+    undoStack = []; save(); renderCase();
+    return true;
+  };
+  window.__wmhTest = {
+    index: INDEX, state,
+    getCase(){ return CASE ? { id: CASE.id, width: CASE.width, height: CASE.height, voxelMm: CASE.voxelMm, voxelMl: CASE.voxelMl,
+                               nSlices: CASE.slices.length, z: CASE.slices.map(s => s.z) } : null; },
+    getScore(){ return score; },
+    getAlgoScore(){ return algoScore; },
+    algoScoreNow(){ return CASE ? computeScore("algo") : null; },      // without scoring the patient
+    ownScoreNow(){ return CASE ? computeScore("own") : null; },
+    refCounts(){ return CASE.slices.map((s, pos) => countVoxels(refMask(pos).ref)); },
+    ignoreCounts(){ return CASE.slices.map((s, pos) => countVoxels(refMask(pos).ignore)); },
+    classIndices(pos){                              // voxels of one slice by class (for colour checks)
+      const r = refMask(pos), m = state.masks[pos], out = { hit: [], extra: [], missed: [], ignored: [] };
+      for (let i = 0; i < r.ref.length; i++){
+        const own = m ? m[i] : 0;
+        if (r.ignore[i]){ if (own) out.ignored.push(i); }
+        else if (own && r.ref[i]) out.hit.push(i);
+        else if (own) out.extra.push(i);
+        else if (r.ref[i]) out.missed.push(i);
+      }
+      return out;
+    },
+    refIndices(pos){ const r = refMask(pos).ref, out = []; for (let i = 0; i < r.length; i++) if (r[i]) out.push(i); return out; },
+    setMask(pos, indices){
+      const m = new Uint8Array(CASE.width * CASE.height);
+      for (const i of indices) m[i] = 1;
+      state.masks[pos] = m; save(); renderCase();
+    },
+    setMasksRle(list){ return setAll(pos => rleDecode(list[pos], CASE.width * CASE.height)); },
+    paintReference(){ return setAll(pos => refMask(pos).ref.slice()); },
+    paintReferencePlusIgnore(){
+      return setAll(pos => { const r = refMask(pos), m = r.ref.slice(); for (let i = 0; i < m.length; i++) if (r.ignore[i]) m[i] = 1; return m; });
+    },
+    clearCase(){ clearWork(); },
+    maskCount(pos){ return countVoxels(state.masks[pos]); },
+    openPatient(id){ return openPatient(id); },
+    pickRandom(){ return pickRandom(); },
+    loadedCaseIds(){ return Object.keys(window.WMH_CASES || {}); },
+    caseScriptCount(){ return document.querySelectorAll('script[src*="data/case_"]').length; },
+    pictureStats(){                                 // grey values of the picture on the screen: not black?
+      const p = pictures[state.slice]; let sum = 0, max = 0;
+      for (let i = 0; i < p.length; i++){ sum += p[i]; if (p[i] > max) max = p[i]; }
+      return { mean: sum / p.length, max };
+    },
+    voxelToClient(x, y){                            // screen position of the centre of voxel (x, y)
+      const rect = cv.getBoundingClientRect(), g = geometry();
+      return { x: rect.left + g.ox + (x + 0.5) * g.px, y: rect.top + g.oy + (y + 0.5) * g.py };
+    },
+    view,
+    maxZoom(){ return maxZoom(); },
+    geometry(){ return { ...geometry(), viewW, viewH }; },
+  };
+}
+
+start();
+
+</script>
+</body>
+</html>

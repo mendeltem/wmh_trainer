@@ -1,0 +1,111 @@
+id	site	scanner	scanner_in_bianca_training	orientation	size_x	size_y	n_slices	voxel_mm	wmh_ml	lesion_load	n_lesions	n_small_lesions	largest_lesion_ml	n_slices_with_wmh	other_pathology_voxels	bianca_dice_whole_scan
+Amsterdam_GE1T5_150	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	4.57	small	42	30	1.11	27	54	0.7107
+Amsterdam_GE1T5_151	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	69.24	large	112	71	33.91	28	45	0.8509
+Amsterdam_GE1T5_152	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	8.47	medium	53	31	1.98	24	0	0.7239
+Amsterdam_GE1T5_153	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	0.85	small	21	14	0.19	18	191	0.2
+Amsterdam_GE1T5_154	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	13.07	medium	42	26	7.31	28	0	0.7418
+Amsterdam_GE1T5_155	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	19.75	large	139	92	5.94	31	0	0.7657
+Amsterdam_GE1T5_156	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	128	256	103	1.30x1.21x3.00	2.34	small	35	21	0.51	24	0	0.6408
+Amsterdam_GE1T5_157	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	124	256	103	1.30x1.21x3.00	0.9	small	22	13	0.21	17	0	0.2465
+Amsterdam_GE1T5_158	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	124	256	103	1.30x1.21x3.00	8.53	medium	146	97	0.95	24	0	0.5541
+Amsterdam_GE1T5_159	Amsterdam_GE1T5	1.5 T GE Signa HDxt (VU Amsterdam)	False	LPS	124	256	103	1.30x1.21x3.00	31.68	large	119	64	10.73	31	0	0.7725
+Amsterdam_GE3T_111	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	22.08	large	66	48	7.13	24	3435	0.7984
+Amsterdam_GE3T_117	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	46.91	large	60	45	23.34	28	377	0.8496
+Amsterdam_GE3T_118	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	2.42	small	57	34	0.44	23	0	0.451
+Amsterdam_GE3T_119	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	39.27	large	45	31	19.82	26	0	0.9009
+Amsterdam_GE3T_120	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	6.3	medium	75	48	0.91	26	0	0.6327
+Amsterdam_GE3T_121	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	9.66	medium	38	22	4.51	20	0	0.7688
+Amsterdam_GE3T_122	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	3.38	small	26	15	1.21	23	0	0.5096
+Amsterdam_GE3T_123	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	1.95	small	19	12	0.65	20	0	0.6059
+Amsterdam_GE3T_124	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	3.3	small	32	20	0.53	15	0	0.5791
+Amsterdam_GE3T_125	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	0.82	small	12	7	0.39	10	0	0.4702
+Amsterdam_GE3T_127	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	3.45	small	20	10	1.72	21	0	0.5804
+Amsterdam_GE3T_128	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	54.23	large	124	79	27.62	35	318	0.747
+Amsterdam_GE3T_129	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	29.82	large	103	70	12.58	29	0	0.8327
+Amsterdam_GE3T_130	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	3.2	small	87	73	0.77	25	0	0.5755
+Amsterdam_GE3T_131	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	4.91	small	37	20	1.08	21	62	0.6034
+Amsterdam_GE3T_133	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	6.43	medium	47	30	2.51	20	0	0.6761
+Amsterdam_GE3T_134	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	14.38	medium	64	39	5.22	28	392	0.7911
+Amsterdam_GE3T_135	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	51.43	large	25	17	28.25	24	0	0.8865
+Amsterdam_GE3T_136	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	1.13	small	17	10	0.3	18	0	0.5804
+Amsterdam_GE3T_138	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	1.88	small	39	24	0.25	22	0	0.5761
+Amsterdam_GE3T_139	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	3.29	small	74	54	0.39	22	0	0.6072
+Amsterdam_GE3T_140	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	13.32	medium	37	27	4.89	29	0	0.7906
+Amsterdam_GE3T_141	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	1.96	small	27	17	0.47	15	0	0.5461
+Amsterdam_GE3T_142	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	26.52	large	50	36	11.88	31	0	0.6787
+Amsterdam_GE3T_143	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	10.93	medium	49	34	6.31	17	0	0.7884
+Amsterdam_GE3T_145	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	11.54	medium	123	83	2.22	25	0	0.7428
+Amsterdam_GE3T_146	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	132	256	83	1.20x0.98x3.00	7.24	medium	103	74	1.64	28	77	0.6201
+Amsterdam_GE3T_147	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	140	256	83	1.20x0.98x3.00	7.56	medium	124	77	0.95	23	0	0.6749
+Amsterdam_GE3T_148	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	124	256	83	1.20x0.98x3.00	12.79	medium	31	20	4.19	21	0	0.768
+Amsterdam_GE3T_149	Amsterdam_GE3T	3 T GE Signa HDxt (VU Amsterdam)	True	LPS	136	256	83	1.20x0.98x3.00	6.01	medium	76	56	2.42	20	0	0.6193
+Amsterdam_PhilipsVU_160	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	45.05	large	97	74	23.47	28	2540	0.875
+Amsterdam_PhilipsVU_161	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	11.75	medium	93	59	2.45	24	0	0.707
+Amsterdam_PhilipsVU_162	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	5.76	medium	90	67	2.08	24	221	0.6311
+Amsterdam_PhilipsVU_163	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	1.14	small	22	13	0.27	16	0	0.648
+Amsterdam_PhilipsVU_164	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	3.39	small	20	14	1.35	22	0	0.6891
+Amsterdam_PhilipsVU_165	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	3.99	small	94	67	0.34	29	0	0.7085
+Amsterdam_PhilipsVU_166	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	9.51	medium	30	20	3.03	21	275	0.811
+Amsterdam_PhilipsVU_167	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	13.28	medium	105	80	4.61	25	1480	0.6564
+Amsterdam_PhilipsVU_168	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	1.23	small	34	26	0.32	27	0	0.6179
+Amsterdam_PhilipsVU_169	Amsterdam_PhilipsVU	3 T Philips Ingenuity (VU Amsterdam)	False	LPS	321	240	83	0.56x1.04x3.00	14.11	medium	164	123	3.85	34	209	0.7198
+Singapore_70	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	7.37	medium	64	50	2.8	21	0	0.7713
+Singapore_71	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	24.84	large	52	31	12.12	22	198	0.8663
+Singapore_72	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	80.51	large	43	31	79.43	27	1545	0.8787
+Singapore_73	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	0.9	small	18	7	0.27	13	342	0.6986
+Singapore_74	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	3.06	small	42	33	0.85	16	0	0.6983
+Singapore_75	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	1.36	small	27	20	0.53	17	0	0.5435
+Singapore_76	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	3.29	small	60	47	0.6	22	407	0.5742
+Singapore_77	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	10.82	medium	90	68	3.67	22	393	0.7514
+Singapore_78	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	2.39	small	30	26	0.94	17	747	0.6512
+Singapore_79	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	7.62	medium	20	12	3.3	19	0	0.7588
+Singapore_80	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	18.17	large	80	60	8.57	21	198	0.8272
+Singapore_81	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	34.98	large	36	27	17.48	23	2744	0.8379
+Singapore_82	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	12.3	medium	62	45	5.83	21	0	0.8471
+Singapore_83	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	4.67	small	75	51	1.48	25	0	0.6995
+Singapore_84	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	23.29	large	148	106	9.12	30	170	0.803
+Singapore_85	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	20.26	large	70	58	10.9	27	0	0.8311
+Singapore_86	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	27.15	large	69	45	13.48	22	0	0.8699
+Singapore_87	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	20.27	large	50	37	8.31	20	0	0.8597
+Singapore_88	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	8.87	medium	76	48	4.42	22	1674	0.702
+Singapore_89	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	0.97	small	19	14	0.38	15	0	0.5534
+Singapore_90	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	4.33	small	57	48	1.54	17	0	0.6824
+Singapore_91	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	11.9	medium	30	23	10.14	16	38308	0.8542
+Singapore_92	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	22.28	large	83	54	7.72	24	0	0.7887
+Singapore_93	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	9.45	medium	55	36	3.62	24	496	0.757
+Singapore_94	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	28.92	large	63	45	16.47	30	53	0.8359
+Singapore_95	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	18.02	large	72	57	8.65	24	0	0.8535
+Singapore_96	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	61.03	large	140	103	28.02	28	112	0.8116
+Singapore_97	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	18.17	large	38	20	7.05	21	1108	0.8135
+Singapore_98	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	4.46	small	55	41	1.75	20	0	0.7564
+Singapore_99	Singapore	3 T Siemens TrioTim (NUHS Singapore)	True	LPS	232	256	48	1.00x1.00x3.00	2.54	small	31	24	1.16	19	0	0.7557
+Utrecht_10	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	6.64	medium	62	36	1.13	26	1924	0.665
+Utrecht_12	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	1.52	small	40	31	0.29	18	0	0.6321
+Utrecht_13	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	51.41	large	111	88	48.29	33	238	0.8547
+Utrecht_14	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	14.26	medium	112	79	4.32	25	0	0.7879
+Utrecht_15	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	7.51	medium	51	33	4.23	27	3679	0.7171
+Utrecht_16	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	12.75	medium	101	69	5.25	24	50	0.6582
+Utrecht_18	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	2.14	small	45	30	0.48	22	0	0.5031
+Utrecht_1	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	4.1	small	70	47	1.39	24	125	0.507
+Utrecht_20	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	15.34	large	76	47	4.15	19	2055	0.6132
+Utrecht_22	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	11.81	medium	49	34	5.36	23	328	0.7649
+Utrecht_24	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	34.93	large	69	42	18.1	29	0	0.7808
+Utrecht_26	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	53.63	large	67	41	51.05	25	2073	0.8704
+Utrecht_28	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	39.2	large	52	34	21.44	28	0	0.9071
+Utrecht_30	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	23.09	large	72	51	11.61	26	0	0.8145
+Utrecht_32	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	13.81	medium	63	39	6.45	24	0	0.6339
+Utrecht_34	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	1.94	small	41	30	0.62	21	0	0.3402
+Utrecht_36	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	1.78	small	51	44	0.59	24	0	0.6498
+Utrecht_38	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	4.26	small	84	54	0.82	31	0	0.5744
+Utrecht_3	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	19.61	large	96	75	8.5	27	55	0.7494
+Utrecht_40	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	14.88	medium	68	43	6.27	27	0	0.7668
+Utrecht_42	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	14.09	medium	89	63	4.14	26	0	0.798
+Utrecht_43	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	0.99	small	23	13	0.21	13	62	0.2036
+Utrecht_44	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	4.78	small	61	40	1.71	26	0	0.7249
+Utrecht_45	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	2.99	small	49	34	0.66	20	0	0.4936
+Utrecht_46	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	41.2	large	68	48	24.61	31	89	0.8847
+Utrecht_47	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	21.88	large	194	130	3.31	33	0	0.7196
+Utrecht_48	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	1.72	small	34	23	0.45	24	0	0.3011
+Utrecht_5	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	2.09	small	15	9	0.67	20	0	0.5517
+Utrecht_7	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	28.64	large	81	54	13.23	28	72	0.8236
+Utrecht_9	Utrecht	3 T Philips Achieva (UMC Utrecht)	True	LPS	240	240	48	0.96x0.96x3.00	195.15	large	23	10	190.6	33	2621	0.73
