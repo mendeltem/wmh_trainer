@@ -10,6 +10,8 @@ on FLAIR MRI. You paint the WMH on a few slices of a patient, press **Score**, a
 
 Then you press **Next patient** and go on, for as long as you like. There are 110 patients.
 
+**Open the trainer:** https://mendeltem.github.io/wmh_trainer/
+
 **For teaching only. Not a medical device. Not for diagnosis or any clinical decision.**
 
 ## How to use

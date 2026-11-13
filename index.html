@@ -1371,11 +1371,13 @@ async function scoreCurrent(){
   save(); renderCase();
   // one column (phone): scroll just far enough that the Dice, the verdict line and the
   // "Next patient" button are on the screen (never further than the top of the score panel)
-  const next = $("btnNext"), panel = $("scorePanel");
-  if (next){
-    const over = next.getBoundingClientRect().bottom + 14 - window.innerHeight;
-    if (over > 0) window.scrollBy(0, Math.min(over, Math.max(0, panel.getBoundingClientRect().top - 8)));
-  }
+  // 13.11.2026: one frame later (the panel was measured before its layout settled) and limited by the Dice line
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const next = $("btnNext"), dice = $("diceValue");
+    if (!next) return;
+    const d = dice ? (dice.parentElement || dice).getBoundingClientRect() : null, nb = next.getBoundingClientRect().bottom;
+    if (d && (d.top < 0 || nb + 14 > window.innerHeight)) window.scrollBy(0, d.top - 8);   // Dice line at the top edge (up or down)
+  }));
 }
 async function retryCurrent(){
   if (!CASE || loading) return;
