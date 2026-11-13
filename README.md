@@ -74,6 +74,11 @@ brain, reduced to 8 bit, together with the manual masks and the mask of the algo
 slices. They are shared under the same licence, **CC BY-NC 4.0: credit the challenge as above,
 non-commercial use only**. The same credit is shown in the footer of the page.
 
+**Code licence:** the code of this repository (`index.html` and the build scripts `build/*.py`, `build/*.mjs`) is under the
+**MIT licence** (`LICENSE`): free to use, change and share, also commercially, with the copyright notice. The MIT licence does
+not cover the data: everything derived from the scans (`data/`, `build/screenshots/`, the case tables and JSON files in `build/`)
+stays under CC BY-NC 4.0 (`data/LICENSE.md`).
+
 The expert masks are the manual reference standard of the challenge (WMH = label 1; other
 pathology = label 2, not scored). The algorithm is BIANCA (Griffanti et al., NeuroImage 2016;
 part of FSL), trained on the 60 training scans of the same challenge. Two of the five test
