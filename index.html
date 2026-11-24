@@ -180,7 +180,7 @@
   .tut{position:fixed;inset:0;z-index:50;background:rgba(6,8,12,.92);display:flex;align-items:center;justify-content:center;padding:16px}
   .tutbox{background:#141821;border:1px solid #2a2f3a;border-radius:14px;max-width:1100px;width:100%;max-height:100%;overflow:auto;
           padding:24px 28px;display:flex;gap:28px;flex-wrap:wrap;align-items:center}
-  .tutbox canvas{width:min(420px,100%);border-radius:10px;background:#000;image-rendering:pixelated}
+  .tutbox canvas{width:min(420px,100%);border-radius:10px;background:#000}
   .tuttext{flex:1;min-width:260px;font-size:20px;line-height:1.5;color:#ece9e1}
   .tutstep{color:#8d929a;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
   .tuttext h2{margin:.2em 0 .4em;font-size:28px}
@@ -339,7 +339,7 @@
         <label class="sl" for="opacity">Mask opacity <b id="opacityVal"></b></label>
         <input type="range" id="opacity" min="10" max="100" step="5">
         <button type="button" id="toggleMask" title="Hide or show the mask (H)">Hide my mask</button>
-        <label class="chk"><input type="checkbox" id="smooth"> Smooth picture</label>
+        <label class="chk" title="On: every voxel is drawn as 4 x 4 smooth points (cubic spline). Off: one square per voxel, the picture as it was measured."><input type="checkbox" id="smooth"> Smooth picture</label>
       </div>
       <div class="grp keys">
         Wheel or pinch: zoom. Right mouse button or Move tool: shift the picture.
@@ -486,15 +486,16 @@ const state = {
   opacity: 55,              // mask opacity in percent
   bright: 0, contrast: 0,   // -100 .. 100
   showMask: true,
-  smooth: false,
+  smooth: true,               // picture drawn with UP x UP smooth points per voxel; off = one square per voxel
   tutorialSeen: false,
   progress: emptyProgress(),
 };
 // The settings of a fresh first load. "Reset my progress" goes back to exactly these.
 const FRESH_SETTINGS = { tool: state.tool, brushMm: state.brushMm, opacity: state.opacity, bright: 0, contrast: 0,
-                         showMask: true, smooth: false, showAlgo: false };
+                         showMask: true, smooth: true, showAlgo: false };
 let CASE = null;                       // data of the patient on the screen (from data/case_<id>.js)
 let pictures = [];                     // pictures[slice] = Uint8Array of grey values
+let picturesFine = [];                 // the same pictures with UP x UP points per voxel, for the screen only
 let refCache = [];                     // decoded expert / other pathology / algorithm masks per slice
 let undoStack = [];
 let score = null, algoScore = null;    // filled when the patient is scored
@@ -550,7 +551,7 @@ function save(){
   try {
     const out = {
       v: 1,
-      settings: { tool: state.tool, brushMm: state.brushMm, opacity: state.opacity, smooth: state.smooth,
+      settings: { tool: state.tool, brushMm: state.brushMm, opacity: state.opacity, smoothPicture: state.smooth,
                   tutorialSeen: state.tutorialSeen },
       current: CASE ? { id: state.id, w: CASE.width, h: CASE.height, slice: state.slice, scored: state.scored,
                         masks: CASE.slices.map((s, pos) => (state.masks[pos] ? rleEncode(state.masks[pos]) : null)) } : null,
@@ -575,7 +576,7 @@ function load(){
     if (["brush", "eraser", "move"].includes(st.tool)) state.tool = st.tool;
     if (st.brushMm >= 1 && st.brushMm <= 30) state.brushMm = Math.round(st.brushMm);
     if (st.opacity >= 10 && st.opacity <= 100) state.opacity = Math.round(st.opacity);
-    state.smooth = st.smooth === true;
+    state.smooth = st.smoothPicture !== false;
     state.tutorialSeen = st.tutorialSeen === true;
   } catch (err){ /* keep the defaults */ }
   try {
@@ -682,7 +683,7 @@ const ml = v => v.toFixed(2) + " ml";
    Drawing
    ========================================================================== */
 const cv = $("cv"), ctx = cv.getContext("2d"), viewEl = $("view");
-const baseCanvas = document.createElement("canvas");   // grey picture, one pixel per voxel
+const baseCanvas = document.createElement("canvas");   // grey picture: UP x UP pixels per voxel (smooth) or one pixel per voxel
 const maskCanvas = document.createElement("canvas");   // mask colours, one pixel per voxel
 const view = { zoom: 1, panX: 0, panY: 0 };
 let viewW = 0, viewH = 0, dpr = 1;
@@ -752,6 +753,65 @@ function layoutBadges(){
   if (!lock.hidden && touching(front, lock)) front.style.top = (lock.offsetTop + lock.offsetHeight + 4) + "px";
 }
 
+const UP = 4;                // smooth picture: points per voxel in each direction
+// Cubic B-spline interpolation of a grey picture to f times the size (f = whole number).
+// The same method as scipy.ndimage.zoom(order=3, grid_mode=True): every voxel becomes f x f
+// smooth points instead of one square. The outline of the picture stays where it is, so the
+// voxel grid of the mask still fits. Returns the grey values row by row (0 .. 255).
+function cubicUp(grey, w, h, f){
+  const Z = Math.sqrt(3) - 2;                      // pole of the cubic spline filter
+  const c = new Float32Array(w * h);
+  for (let i = 0; i < c.length; i++) c[i] = grey[i];
+  // 1. spline coefficients: filter one line (a row or a column) in place, mirrored at the ends
+  const filterLine = (off, n, step) => {
+    if (n < 2) return;
+    let sum = 0, zk = 1;
+    for (let k = 0; k < n; k++) c[off + k * step] *= 6;
+    for (let k = 0; k < Math.min(n, 28); k++){ sum += c[off + k * step] * zk; zk *= Z; }
+    c[off] = sum;
+    for (let k = 1; k < n; k++) c[off + k * step] += Z * c[off + (k - 1) * step];
+    const last = off + (n - 1) * step;
+    c[last] = Z / (Z * Z - 1) * (c[last] + Z * c[last - step]);
+    for (let k = n - 2; k >= 0; k--) c[off + k * step] = Z * (c[off + (k + 1) * step] - c[off + k * step]);
+  };
+  for (let y = 0; y < h; y++) filterLine(y * w, w, 1);
+  for (let x = 0; x < w; x++) filterLine(x, h, w);
+  // 2. for every new point: its 4 neighbours on the old grid and their weights
+  const taps = n => {
+    const idx = new Int32Array(n * f * 4), wt = new Float32Array(n * f * 4);
+    for (let j = 0; j < n * f; j++){
+      const pos = (j + 0.5) / f - 0.5, i = Math.floor(pos), t = pos - i;
+      const weights = [(1 - t) ** 3 / 6, (3 * t ** 3 - 6 * t * t + 4) / 6, (-3 * t ** 3 + 3 * t * t + 3 * t + 1) / 6, t ** 3 / 6];
+      for (let k = 0; k < 4; k++){
+        let q = i - 1 + k;
+        if (q < 0) q = -q;
+        if (q > n - 1) q = 2 * (n - 1) - q;
+        idx[j * 4 + k] = Math.max(0, q); wt[j * 4 + k] = weights[k];
+      }
+    }
+    return { idx, wt };
+  };
+  const W = w * f, H = h * f, tx = taps(w), ty = taps(h);
+  // 3. first along the rows, then along the columns
+  const wide = new Float32Array(W * h);
+  for (let y = 0; y < h; y++){
+    const row = y * w;
+    for (let j = 0, o = y * W; j < W; j++, o++){
+      const a = j * 4;
+      wide[o] = c[row + tx.idx[a]] * tx.wt[a] + c[row + tx.idx[a + 1]] * tx.wt[a + 1] +
+                c[row + tx.idx[a + 2]] * tx.wt[a + 2] + c[row + tx.idx[a + 3]] * tx.wt[a + 3];
+    }
+  }
+  const out = new Uint8ClampedArray(W * H);         // rounds, and keeps the values in 0 .. 255
+  for (let j = 0; j < H; j++){
+    const a = j * 4;
+    const r0 = ty.idx[a] * W, r1 = ty.idx[a + 1] * W, r2 = ty.idx[a + 2] * W, r3 = ty.idx[a + 3] * W;
+    const w0 = ty.wt[a], w1 = ty.wt[a + 1], w2 = ty.wt[a + 2], w3 = ty.wt[a + 3];
+    for (let x = 0, o = j * W; x < W; x++, o++)
+      out[o] = wide[r0 + x] * w0 + wide[r1 + x] * w1 + wide[r2 + x] * w2 + wide[r3 + x] * w3;
+  }
+  return out;
+}
 // Brightness / contrast as a lookup table for the 256 grey values.
 function greyTable(){
   const gain = Math.pow(2, state.contrast / 50);        // 0.25 .. 4
@@ -761,9 +821,10 @@ function greyTable(){
   return table;
 }
 function drawBase(){
-  const c = CASE, grey = pictures[state.slice];
-  baseCanvas.width = c.width; baseCanvas.height = c.height;
-  const img = new ImageData(c.width, c.height), d = img.data, table = greyTable();
+  const c = CASE, f = state.smooth ? UP : 1;
+  const grey = f > 1 ? picturesFine[state.slice] : pictures[state.slice];
+  baseCanvas.width = c.width * f; baseCanvas.height = c.height * f;
+  const img = new ImageData(c.width * f, c.height * f), d = img.data, table = greyTable();
   for (let i = 0, j = 0; i < grey.length; i++, j += 4){
     const v = table[grey[i]];
     d[j] = v; d[j + 1] = v; d[j + 2] = v; d[j + 3] = 255;
@@ -1286,7 +1347,8 @@ async function loadCase(id){
   const c = window.WMH_CASES[id];
   if (!c || !Array.isArray(c.slices) || !c.slices.length) throw new Error("data file of " + id + " is empty");
   const pics = await Promise.all(c.slices.map((s, pos) => decodePicture(c, pos)));
-  return { c, pics };
+  const fine = pics.map(grey => cubicUp(grey, c.width, c.height, UP));
+  return { c, pics, fine };
 }
 // Open a patient. savedCurrent = saved masks to put back (only at the start of the page).
 // Until the new patient is ready, the patient before stays on the screen.
@@ -1307,7 +1369,7 @@ async function openPatient(id, savedCurrent){
   }
   // the new patient is ready: swap
   gesture = null; pointers.clear(); hover = null;
-  CASE = got.c; pictures = got.pics; refCache = []; undoStack = [];
+  CASE = got.c; pictures = got.pics; picturesFine = got.fine; refCache = []; undoStack = [];
   state.id = id; state.slice = 0; state.scored = false; state.showAlgo = false; state.showMask = true;
   state.masks = CASE.slices.map(() => null);
   if (state.tool === "move") state.tool = "brush";
@@ -1461,7 +1523,7 @@ $("opacity").addEventListener("input", e => { state.opacity = +e.target.value; s
 $("bright").addEventListener("input", e => { state.bright = +e.target.value; renderTools(); if (CASE){ drawBase(); requestDraw(); } });
 $("contrast").addEventListener("input", e => { state.contrast = +e.target.value; renderTools(); if (CASE){ drawBase(); requestDraw(); } });
 $("resetGrey").addEventListener("click", () => { state.bright = 0; state.contrast = 0; renderTools(); if (CASE){ drawBase(); requestDraw(); } });
-$("smooth").addEventListener("change", e => { state.smooth = e.target.checked; save(); requestDraw(); });
+$("smooth").addEventListener("change", e => { state.smooth = e.target.checked; save(); if (CASE){ drawBase(); requestDraw(); } });
 $("toggleMask").addEventListener("click", toggleMask);
 $("undo").addEventListener("click", undo);
 $("clearSlice").addEventListener("click", clearSlice);
@@ -1626,26 +1688,36 @@ const TUT_STEPS = [   // title, text, show the answer?
    "and how the algorithm (" + ALGO + ") did on the same slices.</p>" +
    "<p>Then go on with <b>Next patient</b>, as long as you like.</p>", false],
 ];
-let tutStep = 0, tutPicture = null, tutLoading = false;
+let tutStep = 0, tutPicture = null, tutFine = null, tutLoading = false;
 function drawTutorial(){
   const t = window.WMH_TUTORIAL, can = $("tutCv");
   if (!t || !tutPicture){ can.hidden = true; return; }
   can.hidden = false;
-  can.width = t.width; can.height = t.height;
-  can.style.aspectRatio = (t.width * t.voxelMm[0]) + " / " + (t.height * t.voxelMm[1]);
-  const cx = can.getContext("2d");
-  cx.drawImage(tutPicture, 0, 0);
-  if (TUT_STEPS[tutStep][2]){
-    const img = cx.getImageData(0, 0, t.width, t.height), d = img.data;
-    const ref = rleDecode(t.ref, t.width * t.height);
-    for (let i = 0; i < ref.length; i++){
-      if (!ref[i]) continue;
-      d[i * 4] = Math.round(d[i * 4] * 0.35 + 255 * 0.65);
-      d[i * 4 + 1] = Math.round(d[i * 4 + 1] * 0.35 + 214 * 0.65);
-      d[i * 4 + 2] = Math.round(d[i * 4 + 2] * 0.35 + 60 * 0.65);
-    }
-    cx.putImageData(img, 0, 0);
+  const w = t.width, h = t.height, W = w * UP, H = h * UP;
+  can.style.aspectRatio = (w * t.voxelMm[0]) + " / " + (h * t.voxelMm[1]);
+  if (!tutFine){                                   // once: grey values of the picture, UP x UP points per voxel
+    can.width = w; can.height = h;
+    const first = can.getContext("2d");
+    first.drawImage(tutPicture, 0, 0);
+    const rgba = first.getImageData(0, 0, w, h).data, grey = new Uint8Array(w * h);
+    for (let i = 0; i < grey.length; i++) grey[i] = rgba[i * 4];
+    tutFine = cubicUp(grey, w, h, UP);
   }
+  can.width = W; can.height = H;
+  const cx = can.getContext("2d");
+  const img = new ImageData(W, H), d = img.data;
+  const ref = TUT_STEPS[tutStep][2] ? rleDecode(t.ref, w * h) : null;
+  for (let y = 0, j = 0; y < H; y++){
+    const row = Math.floor(y / UP) * w;
+    for (let x = 0; x < W; x++, j += 4){
+      const v = tutFine[y * W + x];
+      if (ref && ref[row + Math.floor(x / UP)]){
+        d[j] = Math.round(v * 0.35 + 255 * 0.65); d[j + 1] = Math.round(v * 0.35 + 214 * 0.65); d[j + 2] = Math.round(v * 0.35 + 60 * 0.65);
+      } else { d[j] = v; d[j + 1] = v; d[j + 2] = v; }
+      d[j + 3] = 255;
+    }
+  }
+  cx.putImageData(img, 0, 0);
 }
 function renderTutorial(){
   const [title, html] = TUT_STEPS[tutStep];

@@ -137,6 +137,11 @@ JavaScript file (about 26 KB per slice on average). The front of the head is at 
 side of the picture is the patient's left. Voxels that are not square are drawn with their true
 proportions.
 
+**Display.** The stored pictures keep one point per voxel. For the screen the page computes 4 x 4
+smooth points per voxel (cubic spline, in the browser, switch "Smooth picture", on by default), so the
+picture does not break into squares when it is enlarged. The mask and the Dice score still use the
+voxels as they were measured; with the switch off every voxel is drawn as one square.
+
 **Algorithm mask.** BIANCA probability of 0.90 or more, inside the white matter mask, not on
 "other pathology", clusters smaller than 3 voxels removed (counted in 3D). The Dice of BIANCA shown
 on the page is counted on the same 6 slices as yours. Its mean over the 110 patients is 0.72 on
